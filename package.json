@@ -1,7 +1,7 @@
 {
   "name": "MahjongProject",
   "version": "1.0.0",
-  "description": "",
+  "description": "--- The end goal of this project is to create an online platform for playing mahjong. The technologies used will definitely include JavaScript and React and will likely include Node and Firebase. I intend to develop the technology in the following phases:",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -17,6 +17,15 @@
     "lodash": "^4.17.4",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
+    "react-router-dom": "^4.2.2",
     "webpack": "^3.10.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pangland/MahjongProject.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pangland/MahjongProject/issues"
+  },
+  "homepage": "https://github.com/pangland/MahjongProject#readme"
 }

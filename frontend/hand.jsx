@@ -19,21 +19,34 @@ class Hand extends React.Component {
 
     this.state = {
       hand: hand,
-      drawnTile: null,
+      drawnTile: this.allTiles.splice(0,1)[0],
       discards: []
     };
   }
 
   discardTile(index, e) {
-    const hand = this.state.hand;
     const discards = this.state.discards;
-    discards.push(hand[index]);
-    hand.splice(index, 1);
-
-    this.setState({
-      hand: hand,
-      discards: discards
-    });
+    const newDrawnTile = this.allTiles.splice(0,1)[0];
+    if (index === 13) {
+      discards.push(this.state.drawnTile);
+      this.setState({
+        discards: discards,
+        drawnTile: newDrawnTile
+      });
+    } else {
+      const hand = this.state.hand;
+      discards.push(hand[index]);
+      hand.splice(index, 1);
+      hand.push(this.state.drawnTile);
+      hand.sort((a, b) => {
+        return a.tileCode <  b.tileCode ? -1 : 1;
+      });
+      this.setState({
+        hand: hand,
+        discards: discards,
+        drawnTile: newDrawnTile
+      });
+    }
   }
 
   render() {
@@ -55,6 +68,10 @@ class Hand extends React.Component {
       );
     });
 
+    const drawn = this.state.drawnTile;
+
+    debugger;
+
     return (
       <div>
         <ul>
@@ -64,6 +81,9 @@ class Hand extends React.Component {
         <ul>
           <h1>Hand</h1>
           {handTiles}
+          <li onClick={this.discardTile.bind(this, 13)}>
+            <img src={`./tiles/${drawn.suit}/${drawn.suit}${drawn.rank}.png`}></img>
+          </li>
         </ul>
       </div>
     );
