@@ -1,5 +1,6 @@
 import React from 'react';
 import { generateTiles } from '../util.js';
+// maybe a tile class later
 
 class Hand extends React.Component {
   constructor(props) {
