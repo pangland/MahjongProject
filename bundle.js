@@ -18283,7 +18283,7 @@ var _react = __webpack_require__(2);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _util = __webpack_require__(29);
+var _util = __webpack_require__(28);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -18303,6 +18303,7 @@ var Hand = function (_React$Component) {
 
     _this.allTiles = (0, _util.generateTiles)();
     _this.orderStartingHand = _this.orderStartingHand.bind(_this);
+    _this.discardTile = _this.discardTile.bind(_this);
     _this.orderStartingHand();
     return _this;
   }
@@ -18316,25 +18317,70 @@ var Hand = function (_React$Component) {
       });
 
       this.state = {
-        hand: hand
+        hand: hand,
+        drawnTile: null,
+        discards: []
       };
+    }
+  }, {
+    key: 'discardTile',
+    value: function discardTile(index, e) {
+      var hand = this.state.hand;
+      var discards = this.state.discards;
+      discards.push(hand[index]);
+      hand.splice(index, 1);
+
+      this.setState({
+        hand: hand,
+        discards: discards
+      });
     }
   }, {
     key: 'render',
     value: function render() {
+      var _this2 = this;
+
       var handTiles = this.state.hand.map(function (tile, index) {
-        var imageLink = './tiles/' + tile.suit + '/' + tile.suit + tile.rank + '.png';
+        var image = './tiles/' + tile.suit + '/' + tile.suit + tile.rank + '.png';
+        return _react2.default.createElement(
+          'li',
+          { key: index, onClick: _this2.discardTile.bind(_this2, index) },
+          _react2.default.createElement('img', { src: image })
+        );
+      });
+
+      var discardedTiles = this.state.discards.map(function (tile, index) {
+        var image = './tiles/' + tile.suit + '/' + tile.suit + tile.rank + '.png';
         return _react2.default.createElement(
           'li',
           { key: index },
-          _react2.default.createElement('img', { src: imageLink })
+          _react2.default.createElement('img', { src: image })
         );
       });
 
       return _react2.default.createElement(
-        'ul',
+        'div',
         null,
-        handTiles
+        _react2.default.createElement(
+          'ul',
+          null,
+          _react2.default.createElement(
+            'h1',
+            null,
+            'Discarded Tiles'
+          ),
+          discardedTiles
+        ),
+        _react2.default.createElement(
+          'ul',
+          null,
+          _react2.default.createElement(
+            'h1',
+            null,
+            'Hand'
+          ),
+          handTiles
+        )
       );
     }
   }]);
@@ -18345,8 +18391,7 @@ var Hand = function (_React$Component) {
 exports.default = Hand;
 
 /***/ }),
-/* 28 */,
-/* 29 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

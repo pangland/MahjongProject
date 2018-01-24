@@ -1,12 +1,12 @@
 import React from 'react';
 import { generateTiles } from '../util.js';
 
-
 class Hand extends React.Component {
   constructor(props) {
     super(props);
     this.allTiles = generateTiles();
     this.orderStartingHand = this.orderStartingHand.bind(this);
+    this.discardTile = this.discardTile.bind(this);
     this.orderStartingHand();
   }
 
@@ -17,24 +17,54 @@ class Hand extends React.Component {
     });
 
     this.state = {
-      hand: hand
+      hand: hand,
+      drawnTile: null,
+      discards: []
     };
+  }
+
+  discardTile(index, e) {
+    const hand = this.state.hand;
+    const discards = this.state.discards;
+    discards.push(hand[index]);
+    hand.splice(index, 1);
+
+    this.setState({
+      hand: hand,
+      discards: discards
+    });
   }
 
   render() {
     const handTiles = this.state.hand.map((tile, index) => {
-      const imageLink = `./tiles/${tile.suit}/${tile.suit}${tile.rank}.png`;
+      const image = `./tiles/${tile.suit}/${tile.suit}${tile.rank}.png`;
+      return (
+        <li key={index} onClick={this.discardTile.bind(this, index)}>
+          <img src={image}></img>
+        </li>
+      );
+    });
+
+    const discardedTiles = this.state.discards.map((tile, index) => {
+      const image = `./tiles/${tile.suit}/${tile.suit}${tile.rank}.png`;
       return (
         <li key={index}>
-          <img src={imageLink}></img>
+          <img src={image}></img>
         </li>
       );
     });
 
     return (
-      <ul>
-        {handTiles}
-      </ul>
+      <div>
+        <ul>
+          <h1>Discarded Tiles</h1>
+          {discardedTiles}
+        </ul>
+        <ul>
+          <h1>Hand</h1>
+          {handTiles}
+        </ul>
+      </div>
     );
   }
 }
