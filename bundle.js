@@ -18306,14 +18306,12 @@ var Hand = function (_React$Component) {
     var _this = _possibleConstructorReturn(this, (Hand.__proto__ || Object.getPrototypeOf(Hand)).call(this, props));
 
     _this.game = new _mahjong_game2.default();
-    _this.allTiles = _this.game.tiles;
-    _this.hand = _this.game.hand;
     _this.discardTile = _this.discardTile.bind(_this);
-    _this.orderStartingHand();
+    _this.game.drawTile();
 
     _this.state = {
       hand: _this.game.hand,
-      drawnTile: _this.game.drawTile(),
+      drawnTile: _this.game.drawnTile,
       discards: _this.game.discards
     };
     return _this;
@@ -18323,29 +18321,12 @@ var Hand = function (_React$Component) {
     key: 'discardTile',
     value: function discardTile(index, e) {
       this.game.discardTile(index);
-
-      var discards = this.state.discards;
-      var newDrawnTile = this.allTiles.splice(0, 1)[0];
-      if (index === 13) {
-        discards.push(this.state.drawnTile);
-        this.setState({
-          discards: discards,
-          drawnTile: newDrawnTile
-        });
-      } else {
-        var hand = this.state.hand;
-        discards.push(hand[index]);
-        hand.splice(index, 1);
-        hand.push(this.state.drawnTile);
-        hand.sort(function (a, b) {
-          return a.tileCode < b.tileCode ? -1 : 1;
-        });
-        this.setState({
-          hand: hand,
-          discards: discards,
-          drawnTile: newDrawnTile
-        });
-      }
+      this.game.drawTile();
+      this.setState({
+        hand: this.game.hand,
+        discards: this.game.discards,
+        drawnTile: this.game.drawnTile
+      });
 
       this.game.isWinningHand();
     }
@@ -18589,7 +18570,7 @@ var MahjongGame = function () {
   }, {
     key: 'orderStartingHand',
     value: function orderStartingHand() {
-      var hand = this.allTiles.splice(0, 13);
+      var hand = this.tiles.splice(0, 13);
       hand.sort(function (a, b) {
         return a.tileCode < b.tileCode ? -1 : 1;
       });
@@ -18604,17 +18585,18 @@ var MahjongGame = function () {
   }, {
     key: 'discardTile',
     value: function discardTile(index) {
-      var newDrawnTile = this.tiles.splice(0, 1)[0];
+      this.newDrawnTile = this.tiles.splice(0, 1)[0];
       if (index === 13) {
         this.discards.push(this.drawnTile);
       } else {
-        var hand = this.state.hand;
+        var hand = this.hand;
         this.discards.push(hand[index]);
         hand.splice(index, 1);
-        hand.push(this.state.drawnTile);
+        hand.push(this.drawnTile);
         hand.sort(function (a, b) {
           return a.tileCode < b.tileCode ? -1 : 1;
         });
+        this.hand = hand;
       }
     }
   }, {
@@ -18672,6 +18654,12 @@ var MahjongGame = function () {
       var winningHands = [];
       var tripletCount = 0;
 
+      var handPlusDraw = this.hand.slice(0);
+      handPlusDraw.push(this.drawnTile);
+      handPlusDraw.sort(function (a, b) {
+        return a.tileCode < b.tileCode ? -1 : 1;
+      });
+
       function handParser(hand) {
         var pairCount = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
         var storedSequences = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
@@ -18681,24 +18669,23 @@ var MahjongGame = function () {
           var currentTileCode = hand[0].tileCode;
           var i = 1;
           var j = 1;
-          var newTileCode = hand[i].tileCode;
-          while (j < 3 && newTileCode <= currentTileCode + j) {
-            if (currentTileCode === newTileCode) {
+          while (j < 3 && i < hand.length) {
+            debugger;
+            if (currentTileCode + j - 1 === hand[i].tileCode) {
               i += 1;
-            } else if (currentTileCode + 1 === newTileCode) {
+            } else if (currentTileCode + j === hand[i].tileCode) {
               runIndices.push(i);
               i += 1;
               j += 1;
             } else {
               return [];
             }
-            newTileCode = hand[i].tileCode;
           }
           return runIndices;
         }
 
         function checkTriplet() {
-          if (hand[1].tileCode === hand[0] && hand[2].tileCode === hand[0]) {
+          if (hand.length > 2 && hand[1].tileCode === hand[0] && hand[2].tileCode === hand[0]) {
             return true;
           }
           return false;
@@ -18706,47 +18693,58 @@ var MahjongGame = function () {
 
         if (hand.length === 0) {
           winningHands.push(storedSequences);
+          debugger;
         } else {
-          if (hand[0].tileCode < 30) {
+          debugger;
+          if (hand[0].tileCode < 30 && hand.length > 2) {
             var runIndices = checkRun(hand);
             if (runIndices.length > 0) {
-              storedSequences.push({
-                type: run,
+              var sequence = {
+                type: 'run',
                 details: hand[0]
-              });
+              };
 
               var cloneHand = hand.slice(0);
-              for (var i = cloneHand.length - 1; i >= 0; i--) {
+              for (var i = 0; i < 3; i++) {
                 cloneHand.splice(runIndices.pop(), 1);
               }
 
-              handParser(cloneHand, pairCount, storedSequences);
+              var sequences = Object.assign({}, storedSequences, sequence);
+              handParser(cloneHand, pairCount, sequences);
             }
           }
 
           var isTriplet = checkTriplet(hand);
 
           if (isTriplet) {
-            storedSequences.push({
+            var _sequence = {
               type: 'triplet',
               details: hand[0]
-            });
+            };
 
             var _cloneHand = hand.slice(0);
             _cloneHand.splice(0, 3);
-            handParser(_cloneHand, pairCount, storedSequences);
+            var _sequences = Object.assign({}, storedSequences, _sequence);
+            handParser(_cloneHand, pairCount, _sequences);
           }
 
           if ((pairCount === storedSequences.length || pairCount === 0) && hand[0].tileCode === hand[1].tileCode) {
+            var _sequence2 = {
+              type: 'pair',
+              details: hand[0]
+            };
+
             var _cloneHand2 = hand.slice(0);
             _cloneHand2.splice(0, 2);
-            handParser(_cloneHand2, pairCount, storedSequences);
+            var _sequences2 = Object.assign({}, storedSequences, _sequence2);
+            handParser(_cloneHand2, pairCount + 1, _sequences2);
           }
         }
       }
 
-      handParser(this.hand);
+      handParser(handPlusDraw);
       if (winningHands.length > 0) {
+        debugger;
         console.log('test');
       }
     }

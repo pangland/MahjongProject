@@ -6,44 +6,24 @@ class Hand extends React.Component {
   constructor(props) {
     super(props);
     this.game = new MahjongGame;
-    this.allTiles = this.game.tiles;
-    this.hand = this.game.hand;
     this.discardTile = this.discardTile.bind(this);
-    this.orderStartingHand();
+    this.game.drawTile();
 
     this.state = {
       hand: this.game.hand,
-      drawnTile: this.game.drawTile(),
+      drawnTile: this.game.drawnTile,
       discards: this.game.discards
     };
   }
 
   discardTile(index, e) {
     this.game.discardTile(index);
-
-
-    const discards = this.state.discards;
-    const newDrawnTile = this.allTiles.splice(0,1)[0];
-    if (index === 13) {
-      discards.push(this.state.drawnTile);
-      this.setState({
-        discards: discards,
-        drawnTile: newDrawnTile
-      });
-    } else {
-      const hand = this.state.hand;
-      discards.push(hand[index]);
-      hand.splice(index, 1);
-      hand.push(this.state.drawnTile);
-      hand.sort((a, b) => {
-        return a.tileCode <  b.tileCode ? -1 : 1;
-      });
-      this.setState({
-        hand: hand,
-        discards: discards,
-        drawnTile: newDrawnTile
-      });
-    }
+    this.game.drawTile();
+    this.setState({
+      hand: this.game.hand,
+      discards: this.game.discards,
+      drawnTile: this.game.drawnTile
+    });
 
     this.game.isWinningHand();
   }
@@ -79,7 +59,8 @@ class Hand extends React.Component {
           <h1>Hand</h1>
           {handTiles}
           <li onClick={this.discardTile.bind(this, 13)}>
-            <img src={`./tiles/${drawn.suit}/${drawn.suit}${drawn.rank}.png`}></img>
+            <img src={`./tiles/${drawn.suit}/${drawn.suit}${drawn.rank}.png`}>
+            </img>
           </li>
         </ul>
       </div>

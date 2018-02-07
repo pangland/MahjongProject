@@ -51,7 +51,7 @@ class MahjongGame {
   }
 
   orderStartingHand() {
-    const hand = this.allTiles.splice(0,13);
+    const hand = this.tiles.splice(0,13);
     hand.sort((a, b) => {
       return a.tileCode <  b.tileCode ? -1 : 1;
     });
@@ -64,17 +64,18 @@ class MahjongGame {
   }
 
   discardTile(index) {
-    const newDrawnTile = this.tiles.splice(0,1)[0];
+    this.newDrawnTile = this.tiles.splice(0,1)[0];
     if (index === 13) {
       this.discards.push(this.drawnTile);
     } else {
-      const hand = this.state.hand;
+      const hand = this.hand;
       this.discards.push(hand[index]);
       hand.splice(index, 1);
-      hand.push(this.state.drawnTile);
+      hand.push(this.drawnTile);
       hand.sort((a, b) => {
         return a.tileCode <  b.tileCode ? -1 : 1;
       });
+      this.hand = hand;
     }
   }
 
@@ -130,31 +131,37 @@ class MahjongGame {
     const winningHands = [];
     const tripletCount = 0;
 
+    const handPlusDraw = this.hand.slice(0);
+    handPlusDraw.push(this.drawnTile);
+    handPlusDraw.sort((a, b) => {
+      return a.tileCode <  b.tileCode ? -1 : 1;
+    });
+
     function handParser(hand, pairCount = 0, storedSequences = []) {
       function checkRun() {
         const runIndices = [0];
-        let currentTileCode = hand[0].tileCode;
+        const currentTileCode = hand[0].tileCode;
         let i = 1;
         let j = 1;
-        let newTileCode = hand[i].tileCode;
-        while (j < 3 && newTileCode <= currentTileCode + j) {
-          if (currentTileCode === newTileCode) {
+        while (j < 3 && i < hand.length) {
+          debugger;
+          if (currentTileCode + j - 1 === hand[i].tileCode) {
             i += 1;
-          } else if (currentTileCode + 1 === newTileCode){
+          } else if (currentTileCode + j === hand[i].tileCode){
             runIndices.push(i);
             i += 1;
             j += 1;
           } else {
             return [];
           }
-          newTileCode = hand[i].tileCode;
         }
         return runIndices;
       }
 
       function checkTriplet() {
         if (
-          hand[1].tileCode === hand[0]
+          hand.length > 2
+          && hand[1].tileCode === hand[0]
           && hand[2].tileCode === hand[0]
         ) {
           return true;
@@ -164,50 +171,61 @@ class MahjongGame {
 
       if (hand.length === 0) {
         winningHands.push(storedSequences);
+        debugger;
       } else {
-        if (hand[0].tileCode < 30) {
+        debugger;
+        if (hand[0].tileCode < 30 && hand.length > 2) {
           const runIndices = checkRun(hand);
           if (runIndices.length > 0) {
-            storedSequences.push({
-              type: run,
+            const sequence = {
+              type: 'run',
               details: hand[0]
-            });
+            };
 
             const cloneHand = hand.slice(0);
-            for (let i = cloneHand.length - 1; i >= 0; i--) {
+            for (let i = 0; i < 3; i++) {
               cloneHand.splice(runIndices.pop(), 1);
             }
 
-            handParser(cloneHand, pairCount, storedSequences);
+            const sequences = Object.assign({}, storedSequences, sequence);
+            handParser(cloneHand, pairCount, sequences);
           }
         }
 
         const isTriplet = checkTriplet(hand);
 
         if (isTriplet) {
-          storedSequences.push({
+          const sequence = {
             type: 'triplet',
             details: hand[0]
-          });
+          };
 
           const cloneHand = hand.slice(0);
           cloneHand.splice(0, 3);
-          handParser(cloneHand, pairCount, storedSequences);
+          const sequences = Object.assign({}, storedSequences, sequence);
+          handParser(cloneHand, pairCount, sequences);
         }
 
         if (
           (pairCount === storedSequences.length || pairCount === 0)
           && hand[0].tileCode === hand[1].tileCode
         ) {
+          const sequence = {
+            type: 'pair',
+            details: hand[0]
+          };
+
           const cloneHand = hand.slice(0);
           cloneHand.splice(0,2);
-          handParser(cloneHand, pairCount, storedSequences);
+          const sequences = Object.assign({}, storedSequences, sequence);
+          handParser(cloneHand, pairCount + 1, sequences);
         }
       }
     }
 
-    handParser(this.hand);
+    handParser(handPlusDraw);
     if (winningHands.length > 0) {
+      debugger;
       console.log('test');
     }
   }
