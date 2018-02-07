@@ -18307,12 +18307,16 @@ var Hand = function (_React$Component) {
 
     _this.game = new _mahjong_game2.default();
     _this.discardTile = _this.discardTile.bind(_this);
+    _this.closedKan = _this.closedKan.bind(_this);
     _this.game.drawTile();
 
     _this.state = {
       hand: _this.game.hand,
+      closedKans: _this.game.closedKans,
+      openHand: _this.game.openHand,
       drawnTile: _this.game.drawnTile,
-      discards: _this.game.discards
+      discards: _this.game.discards,
+      kannable: _this.game.isKannable
     };
     return _this;
   }
@@ -18331,10 +18335,23 @@ var Hand = function (_React$Component) {
       this.game.isWinningHand();
     }
   }, {
+    key: 'closedKan',
+    value: function closedKan(e) {
+      this.game.closedKan();
+      this.setState({
+        hand: this.game.hand,
+        closedKans: this.game.closedKans,
+        openhand: this.game.openHand,
+        discards: this.game.discards,
+        drawnTile: this.game.drawnTile
+      });
+    }
+  }, {
     key: 'render',
     value: function render() {
       var _this2 = this;
 
+      debugger;
       var handTiles = this.state.hand.map(function (tile, index) {
         var image = './tiles/' + tile.suit + '/' + tile.suit + tile.rank + '.png';
         return _react2.default.createElement(
@@ -18354,6 +18371,15 @@ var Hand = function (_React$Component) {
       });
 
       var drawn = this.state.drawnTile;
+
+      var kannable = void 0;
+      if (this.game.isKannable()) {
+        kannable = _react2.default.createElement(
+          'button',
+          { onClick: this.closedKan },
+          'Kan'
+        );
+      }
 
       return _react2.default.createElement(
         'div',
@@ -18384,7 +18410,8 @@ var Hand = function (_React$Component) {
             _react2.default.createElement('img', { src: './tiles/' + drawn.suit + '/' + drawn.suit + drawn.rank + '.png' })
           )
         ),
-        _react2.default.createElement('div', null)
+        _react2.default.createElement('ul', null),
+        kannable
       );
     }
   }]);
@@ -18522,6 +18549,8 @@ var MahjongGame = function () {
     this.orderStartingHand();
     this.discards = [];
     this.drawnTile = null;
+    this.closedKans = [];
+    this.openHand = [];
   }
 
   _createClass(MahjongGame, [{
@@ -18598,6 +18627,34 @@ var MahjongGame = function () {
           return a.tileCode < b.tileCode ? -1 : 1;
         });
         this.hand = hand;
+      }
+    }
+  }, {
+    key: 'isKannable',
+    value: function isKannable() {
+      debugger;
+      for (var i = 0; i < this.hand.length - 2; i++) {
+        if (this.hand[i].tileCode > this.drawnTile.tileCode) {
+          return false;
+        }
+
+        if (this.hand[i].tileCode === this.drawnTile.tileCode && this.hand[i].tileCode === this.hand[i + 1].tileCode && this.hand[i + 1].tileCode === this.hand[i + 2].tileCode) {
+          return true;
+        } else if (this.hand[i].tileCode === this.drawnTile.tileCode) {
+          return false;
+        }
+      }
+      return false;
+    }
+  }, {
+    key: 'closedKan',
+    value: function closedKan() {
+      for (var i = 0; i < this.hand.length; i++) {
+        if (this.hand[i].tileCode === this.drawnTile.tileCode) {
+          this.closedKans.push(this.drawnTile);
+          this.hand.splice(i, 3);
+          this.drawTile();
+        }
       }
     }
   }, {
@@ -18744,7 +18801,6 @@ var MahjongGame = function () {
       if (winningHands.length > 0) {
         return true;
       }
-      debugger;
     }
   }, {
     key: 'isOpen',

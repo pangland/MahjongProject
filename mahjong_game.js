@@ -6,6 +6,8 @@ class MahjongGame {
     this.orderStartingHand();
     this.discards = [];
     this.drawnTile = null;
+    this.closedKans = [];
+    this.openHand = [];
   }
 
   generateTiles() {
@@ -75,6 +77,36 @@ class MahjongGame {
         return a.tileCode <  b.tileCode ? -1 : 1;
       });
       this.hand = hand;
+    }
+  }
+
+  isKannable() {
+    debugger;
+    for (let i = 0; i < this.hand.length - 2; i++) {
+      if (this.hand[i].tileCode > this.drawnTile.tileCode) {
+        return false;
+      }
+
+      if (
+        this.hand[i].tileCode === this.drawnTile.tileCode
+        && this.hand[i].tileCode === this.hand[i+1].tileCode
+        && this.hand[i+1].tileCode === this.hand[i+2].tileCode
+      ) {
+        return true;
+      } else if (this.hand[i].tileCode === this.drawnTile.tileCode) {
+        return false;
+      }
+    }
+    return false;
+  }
+
+  closedKan() {
+    for (let i = 0; i < this.hand.length; i++) {
+      if (this.hand[i].tileCode === this.drawnTile.tileCode) {
+        this.closedKans.push(this.drawnTile);
+        this.hand.splice(i, 3);
+        this.drawTile();
+      }
     }
   }
 
@@ -223,7 +255,6 @@ class MahjongGame {
     if (winningHands.length > 0) {
       return true;
     }
-    debugger;
   }
 
   isOpen() {

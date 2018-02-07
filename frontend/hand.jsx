@@ -7,12 +7,16 @@ class Hand extends React.Component {
     super(props);
     this.game = new MahjongGame;
     this.discardTile = this.discardTile.bind(this);
+    this.closedKan = this.closedKan.bind(this);
     this.game.drawTile();
 
     this.state = {
       hand: this.game.hand,
+      closedKans: this.game.closedKans,
+      openHand: this.game.openHand,
       drawnTile: this.game.drawnTile,
-      discards: this.game.discards
+      discards: this.game.discards,
+      kannable: this.game.isKannable,
     };
   }
 
@@ -28,7 +32,19 @@ class Hand extends React.Component {
     this.game.isWinningHand();
   }
 
+  closedKan(e) {
+    this.game.closedKan();
+    this.setState({
+      hand: this.game.hand,
+      closedKans: this.game.closedKans,
+      openhand: this.game.openHand,
+      discards: this.game.discards,
+      drawnTile: this.game.drawnTile
+    });
+  }
+
   render() {
+    debugger;
     const handTiles = this.state.hand.map((tile, index) => {
       const image = `./tiles/${tile.suit}/${tile.suit}${tile.rank}.png`;
       return (
@@ -49,6 +65,11 @@ class Hand extends React.Component {
 
     const drawn = this.state.drawnTile;
 
+    let kannable;
+    if (this.game.isKannable()) {
+      kannable = <button onClick={this.closedKan}>Kan</button>;
+    }
+
     return (
       <div>
         <ul className='discards'>
@@ -64,7 +85,10 @@ class Hand extends React.Component {
             </img>
           </li>
         </ul>
-        <div></div>
+        <ul>
+
+        </ul>
+        {kannable}
       </div>
     );
   }
