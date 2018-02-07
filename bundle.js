@@ -18383,7 +18383,8 @@ var Hand = function (_React$Component) {
             { onClick: this.discardTile.bind(this, 13) },
             _react2.default.createElement('img', { src: './tiles/' + drawn.suit + '/' + drawn.suit + drawn.rank + '.png' })
           )
-        )
+        ),
+        _react2.default.createElement('div', null)
       );
     }
   }]);
@@ -18671,7 +18672,6 @@ var MahjongGame = function () {
           var i = 1;
           var j = 1;
           while (j < 3 && i < hand.length) {
-            debugger;
             if (currentTileCode + j - 1 === hand[i].tileCode) {
               i += 1;
             } else if (currentTileCode + j === hand[i].tileCode) {
@@ -18694,9 +18694,7 @@ var MahjongGame = function () {
 
         if (hand.length === 0) {
           winningHands.push(storedSequences);
-          debugger;
         } else {
-          debugger;
           if (hand[0].tileCode < 30 && hand.length > 2) {
             var runIndices = checkRun(hand);
             if (runIndices.length > 0) {
@@ -18745,8 +18743,7 @@ var MahjongGame = function () {
 
       handParser(handPlusDraw);
       if (winningHands.length > 0) {
-        debugger;
-        console.log('test');
+        return true;
       }
     }
   }, {

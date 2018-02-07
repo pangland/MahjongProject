@@ -144,7 +144,6 @@ class MahjongGame {
         let i = 1;
         let j = 1;
         while (j < 3 && i < hand.length) {
-          debugger;
           if (currentTileCode + j - 1 === hand[i].tileCode) {
             i += 1;
           } else if (currentTileCode + j === hand[i].tileCode){
@@ -171,9 +170,7 @@ class MahjongGame {
 
       if (hand.length === 0) {
         winningHands.push(storedSequences);
-        debugger;
       } else {
-        debugger;
         if (hand[0].tileCode < 30 && hand.length > 2) {
           const runIndices = checkRun(hand);
           if (runIndices.length > 0) {
@@ -225,8 +222,7 @@ class MahjongGame {
 
     handParser(handPlusDraw);
     if (winningHands.length > 0) {
-      debugger;
-      console.log('test');
+      return true;
     }
   }
 

@@ -64,6 +64,7 @@ class Hand extends React.Component {
             </img>
           </li>
         </ul>
+        <div></div>
       </div>
     );
   }
