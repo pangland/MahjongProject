@@ -1,30 +1,27 @@
 import React from 'react';
-import { generateTiles } from '../util.js';
-// maybe a tile class later
+import { generateTiles } from '../util';
+import MahjongGame from '../mahjong_game';
 
 class Hand extends React.Component {
   constructor(props) {
     super(props);
-    this.allTiles = generateTiles();
-    this.orderStartingHand = this.orderStartingHand.bind(this);
+    this.game = new MahjongGame;
+    this.allTiles = this.game.tiles;
+    this.hand = this.game.hand;
     this.discardTile = this.discardTile.bind(this);
     this.orderStartingHand();
-  }
-
-  orderStartingHand() {
-    const hand = this.allTiles.splice(0,13);
-    hand.sort((a, b) => {
-      return a.tileCode <  b.tileCode ? -1 : 1;
-    });
 
     this.state = {
-      hand: hand,
-      drawnTile: this.allTiles.splice(0,1)[0],
-      discards: []
+      hand: this.game.hand,
+      drawnTile: this.game.drawTile(),
+      discards: this.game.discards
     };
   }
 
   discardTile(index, e) {
+    this.game.discardTile(index);
+
+
     const discards = this.state.discards;
     const newDrawnTile = this.allTiles.splice(0,1)[0];
     if (index === 13) {
@@ -47,6 +44,8 @@ class Hand extends React.Component {
         drawnTile: newDrawnTile
       });
     }
+
+    this.game.isWinningHand();
   }
 
   render() {
@@ -69,8 +68,6 @@ class Hand extends React.Component {
     });
 
     const drawn = this.state.drawnTile;
-
-    debugger;
 
     return (
       <div>

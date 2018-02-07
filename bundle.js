@@ -18285,6 +18285,10 @@ var _react2 = _interopRequireDefault(_react);
 
 var _util = __webpack_require__(28);
 
+var _mahjong_game = __webpack_require__(29);
+
+var _mahjong_game2 = _interopRequireDefault(_mahjong_game);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -18292,8 +18296,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-// maybe a tile class later
 
 var Hand = function (_React$Component) {
   _inherits(Hand, _React$Component);
@@ -18303,30 +18305,25 @@ var Hand = function (_React$Component) {
 
     var _this = _possibleConstructorReturn(this, (Hand.__proto__ || Object.getPrototypeOf(Hand)).call(this, props));
 
-    _this.allTiles = (0, _util.generateTiles)();
-    _this.orderStartingHand = _this.orderStartingHand.bind(_this);
+    _this.game = new _mahjong_game2.default();
+    _this.allTiles = _this.game.tiles;
+    _this.hand = _this.game.hand;
     _this.discardTile = _this.discardTile.bind(_this);
     _this.orderStartingHand();
+
+    _this.state = {
+      hand: _this.game.hand,
+      drawnTile: _this.game.drawTile(),
+      discards: _this.game.discards
+    };
     return _this;
   }
 
   _createClass(Hand, [{
-    key: 'orderStartingHand',
-    value: function orderStartingHand() {
-      var hand = this.allTiles.splice(0, 13);
-      hand.sort(function (a, b) {
-        return a.tileCode < b.tileCode ? -1 : 1;
-      });
-
-      this.state = {
-        hand: hand,
-        drawnTile: this.allTiles.splice(0, 1)[0],
-        discards: []
-      };
-    }
-  }, {
     key: 'discardTile',
     value: function discardTile(index, e) {
+      this.game.discardTile(index);
+
       var discards = this.state.discards;
       var newDrawnTile = this.allTiles.splice(0, 1)[0];
       if (index === 13) {
@@ -18349,6 +18346,8 @@ var Hand = function (_React$Component) {
           drawnTile: newDrawnTile
         });
       }
+
+      this.game.isWinningHand();
     }
   }, {
     key: 'render',
@@ -18374,8 +18373,6 @@ var Hand = function (_React$Component) {
       });
 
       var drawn = this.state.drawnTile;
-
-      debugger;
 
       return _react2.default.createElement(
         'div',
@@ -18516,6 +18513,274 @@ var findTileCode = exports.findTileCode = function findTileCode(rank, suit) {
 
   return tileCode;
 };
+
+/***/ }),
+/* 29 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _util = __webpack_require__(28);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var MahjongGame = function () {
+  function MahjongGame() {
+    _classCallCheck(this, MahjongGame);
+
+    this.tiles = this.generateTiles();
+    this.orderStartingHand();
+    this.discards = [];
+    this.drawnTile = null;
+  }
+
+  _createClass(MahjongGame, [{
+    key: 'generateTiles',
+    value: function generateTiles() {
+      var numberValues = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+      var numberedSuits = ['bamboo', 'number', 'pin'];
+      var dragonValues = ['red', 'white', 'green'];
+      var windValues = ['east', 'south', 'west', 'north'];
+      var tiles = [];
+
+      function makeFourCopies(rank, suit) {
+        for (var i = 0; i < 4; i++) {
+          tiles.push({
+            rank: rank,
+            suit: suit,
+            tileCode: (0, _util.findTileCode)(rank, suit)
+          });
+        }
+      }
+
+      function shuffleTiles() {
+        for (var i = 0; i < tiles.length; i++) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var _ref = [tiles[j], tiles[i]];
+          tiles[i] = _ref[0];
+          tiles[j] = _ref[1];
+        }
+      }
+
+      numberValues.forEach(function (rank) {
+        numberedSuits.forEach(function (suit) {
+          makeFourCopies(rank, suit);
+        });
+      });
+
+      dragonValues.forEach(function (rank) {
+        makeFourCopies(rank, 'dragon');
+      });
+
+      windValues.forEach(function (rank) {
+        makeFourCopies(rank, 'wind');
+      });
+
+      shuffleTiles();
+      return tiles;
+    }
+  }, {
+    key: 'orderStartingHand',
+    value: function orderStartingHand() {
+      var hand = this.allTiles.splice(0, 13);
+      hand.sort(function (a, b) {
+        return a.tileCode < b.tileCode ? -1 : 1;
+      });
+
+      this.hand = hand;
+    }
+  }, {
+    key: 'drawTile',
+    value: function drawTile() {
+      this.drawnTile = this.tiles.splice(0, 1)[0];
+    }
+  }, {
+    key: 'discardTile',
+    value: function discardTile(index) {
+      var newDrawnTile = this.tiles.splice(0, 1)[0];
+      if (index === 13) {
+        this.discards.push(this.drawnTile);
+      } else {
+        var hand = this.state.hand;
+        this.discards.push(hand[index]);
+        hand.splice(index, 1);
+        hand.push(this.state.drawnTile);
+        hand.sort(function (a, b) {
+          return a.tileCode < b.tileCode ? -1 : 1;
+        });
+      }
+    }
+  }, {
+    key: 'findTileCode',
+    value: function findTileCode(rank, suit) {
+      var tileCode = 0;
+
+      switch (suit) {
+        case 'number':
+          tileCode += 0;
+          break;
+        case 'pin':
+          tileCode += 10;
+          break;
+        case 'bamboo':
+          tileCode += 20;
+          break;
+        case 'wind':
+          tileCode += 40;
+          break;
+        case 'dragon':
+          tileCode += 80;
+      }
+
+      switch (rank) {
+        case 'white':
+          break;
+        case 'green':
+          tileCode += 10;
+          break;
+        case 'red':
+          tileCode += 20;
+          break;
+        case 'east':
+          break;
+        case 'south':
+          tileCode += 10;
+          break;
+        case 'west':
+          tileCode += 20;
+          break;
+        case 'north':
+          tileCode += 30;
+          break;
+        default:
+          tileCode += rank;
+      }
+
+      return tileCode;
+    }
+  }, {
+    key: 'isWinningHand',
+    value: function isWinningHand() {
+      // let's ignore yakuman for now
+      var winningHands = [];
+      var tripletCount = 0;
+
+      function handParser(hand) {
+        var pairCount = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+        var storedSequences = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+
+        function checkRun() {
+          var runIndices = [0];
+          var currentTileCode = hand[0].tileCode;
+          var i = 1;
+          var j = 1;
+          var newTileCode = hand[i].tileCode;
+          while (j < 3 && newTileCode <= currentTileCode + j) {
+            if (currentTileCode === newTileCode) {
+              i += 1;
+            } else if (currentTileCode + 1 === newTileCode) {
+              runIndices.push(i);
+              i += 1;
+              j += 1;
+            } else {
+              return [];
+            }
+            newTileCode = hand[i].tileCode;
+          }
+          return runIndices;
+        }
+
+        function checkTriplet() {
+          if (hand[1].tileCode === hand[0] && hand[2].tileCode === hand[0]) {
+            return true;
+          }
+          return false;
+        }
+
+        if (hand.length === 0) {
+          winningHands.push(storedSequences);
+        } else {
+          if (hand[0].tileCode < 30) {
+            var runIndices = checkRun(hand);
+            if (runIndices.length > 0) {
+              storedSequences.push({
+                type: run,
+                details: hand[0]
+              });
+
+              var cloneHand = hand.slice(0);
+              for (var i = cloneHand.length - 1; i >= 0; i--) {
+                cloneHand.splice(runIndices.pop(), 1);
+              }
+
+              handParser(cloneHand, pairCount, storedSequences);
+            }
+          }
+
+          var isTriplet = checkTriplet(hand);
+
+          if (isTriplet) {
+            storedSequences.push({
+              type: 'triplet',
+              details: hand[0]
+            });
+
+            var _cloneHand = hand.slice(0);
+            _cloneHand.splice(0, 3);
+            handParser(_cloneHand, pairCount, storedSequences);
+          }
+
+          if ((pairCount === storedSequences.length || pairCount === 0) && hand[0].tileCode === hand[1].tileCode) {
+            var _cloneHand2 = hand.slice(0);
+            _cloneHand2.splice(0, 2);
+            handParser(_cloneHand2, pairCount, storedSequences);
+          }
+        }
+      }
+
+      handParser(this.hand);
+      if (winningHands.length > 0) {
+        console.log('test');
+      }
+    }
+  }, {
+    key: 'isOpen',
+    value: function isOpen() {
+      return false;
+    }
+
+    // isTenpai() {
+    //   const tileCodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15,
+    //     16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 40, 50, 60,
+    //     70, 80, 90, 100];
+    //
+    //   for (let i = 0; i < this.hand.length; i++) {
+    //     let savedTileCode = this.hand[i].tileCode;
+    //     tileCodes.forEach((tileCode) => {
+    //       this.hand[i].tileCode = tileCode;
+    //       if (this.isWinningHand()) {
+    //         break;
+    //       }
+    //     });
+    //     this.hand[i].tileCode = savedTileCode;
+    //   }
+    //
+    //   this.isWinningHand();
+    // }
+
+  }]);
+
+  return MahjongGame;
+}();
+
+exports.default = MahjongGame;
 
 /***/ })
 /******/ ]);

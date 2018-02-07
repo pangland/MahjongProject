@@ -3,6 +3,9 @@ import { findTileCode } from './util.js';
 class MahjongGame {
   constructor() {
     this.tiles = this.generateTiles();
+    this.orderStartingHand();
+    this.discards = [];
+    this.drawnTile = null;
   }
 
   generateTiles() {
@@ -45,6 +48,34 @@ class MahjongGame {
 
     shuffleTiles();
     return tiles;
+  }
+
+  orderStartingHand() {
+    const hand = this.allTiles.splice(0,13);
+    hand.sort((a, b) => {
+      return a.tileCode <  b.tileCode ? -1 : 1;
+    });
+
+    this.hand = hand;
+  }
+
+  drawTile() {
+    this.drawnTile = this.tiles.splice(0,1)[0];
+  }
+
+  discardTile(index) {
+    const newDrawnTile = this.tiles.splice(0,1)[0];
+    if (index === 13) {
+      this.discards.push(this.drawnTile);
+    } else {
+      const hand = this.state.hand;
+      this.discards.push(hand[index]);
+      hand.splice(index, 1);
+      hand.push(this.state.drawnTile);
+      hand.sort((a, b) => {
+        return a.tileCode <  b.tileCode ? -1 : 1;
+      });
+    }
   }
 
   findTileCode(rank, suit) {
@@ -97,27 +128,26 @@ class MahjongGame {
   isWinningHand() {
     // let's ignore yakuman for now
     const winningHands = [];
-    const pairCount = 0;
     const tripletCount = 0;
 
     function handParser(hand, pairCount = 0, storedSequences = []) {
       function checkRun() {
         const runIndices = [0];
-        let currentTileCode = hand[index].tileCode;
+        let currentTileCode = hand[0].tileCode;
         let i = 1;
         let j = 1;
-        let newTileCode = hand[index + i].tileCode;
+        let newTileCode = hand[i].tileCode;
         while (j < 3 && newTileCode <= currentTileCode + j) {
-          const newTileCode = hand[index + i].tileCode;
           if (currentTileCode === newTileCode) {
             i += 1;
           } else if (currentTileCode + 1 === newTileCode){
-            runIndices.push[i];
+            runIndices.push(i);
             i += 1;
             j += 1;
           } else {
             return [];
           }
+          newTileCode = hand[i].tileCode;
         }
         return runIndices;
       }
@@ -136,12 +166,12 @@ class MahjongGame {
         winningHands.push(storedSequences);
       } else {
         if (hand[0].tileCode < 30) {
-          const runIndices = checkRun();
+          const runIndices = checkRun(hand);
           if (runIndices.length > 0) {
             storedSequences.push({
               type: run,
               details: hand[0]
-            })
+            });
 
             const cloneHand = hand.slice(0);
             for (let i = cloneHand.length - 1; i >= 0; i--) {
@@ -152,11 +182,11 @@ class MahjongGame {
           }
         }
 
-        const isTriplet = checkTriplet();
+        const isTriplet = checkTriplet(hand);
 
         if (isTriplet) {
           storedSequences.push({
-            type: triplet,
+            type: 'triplet',
             details: hand[0]
           });
 
@@ -171,7 +201,7 @@ class MahjongGame {
         ) {
           const cloneHand = hand.slice(0);
           cloneHand.splice(0,2);
-          handParser(cloneHand, pairCount, storedSequences)
+          handParser(cloneHand, pairCount, storedSequences);
         }
       }
     }
@@ -183,25 +213,27 @@ class MahjongGame {
   }
 
   isOpen() {
-
+    return false;
   }
 
-  isTenpai() {
-    const tileCodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15,
-      16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 40, 50, 60,
-      70, 80, 90, 100];
-
-    for (let i = 0; i < this.hand.length; i++) {
-      let savedTileCode = this.hand[i].tileCode;
-      tileCodes.forEach((tileCode) => {
-        this.hand[i].tileCode = tileCode;
-        if (this.isWinningHand()) {
-          break;
-        }
-      });
-      this.hand[i].tileCode = savedTileCode;
-    }
-
-    this.isWinningHand();
-  }
+  // isTenpai() {
+  //   const tileCodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15,
+  //     16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 40, 50, 60,
+  //     70, 80, 90, 100];
+  //
+  //   for (let i = 0; i < this.hand.length; i++) {
+  //     let savedTileCode = this.hand[i].tileCode;
+  //     tileCodes.forEach((tileCode) => {
+  //       this.hand[i].tileCode = tileCode;
+  //       if (this.isWinningHand()) {
+  //         break;
+  //       }
+  //     });
+  //     this.hand[i].tileCode = savedTileCode;
+  //   }
+  //
+  //   this.isWinningHand();
+  // }
 }
+
+export default MahjongGame;
