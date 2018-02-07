@@ -134,22 +134,25 @@ class MahjongGame {
 
       if (hand.length === 0) {
         winningHands.push(storedSequences);
-      } else if (hand[0].tileCode < 30) {
-        const runIndices = checkRun();
-        const isTriplet = checkTriplet();
-        if (runIndices.length > 0) {
-          storedSequences.push({
-            type: run,
-            details: hand[0]
-          })
+      } else {
+        if (hand[0].tileCode < 30) {
+          const runIndices = checkRun();
+          if (runIndices.length > 0) {
+            storedSequences.push({
+              type: run,
+              details: hand[0]
+            })
 
-          const cloneHand = hand.slice(0);
-          for (let i = cloneHand.length - 1; i >= 0; i--) {
-            cloneHand.splice(runIndices.pop(), 1);
+            const cloneHand = hand.slice(0);
+            for (let i = cloneHand.length - 1; i >= 0; i--) {
+              cloneHand.splice(runIndices.pop(), 1);
+            }
+
+            handParser(cloneHand, pairCount, storedSequences);
           }
-
-          handParser(cloneHand, pairCount, storedSequences);
         }
+
+        const isTriplet = checkTriplet();
 
         if (isTriplet) {
           storedSequences.push({
@@ -174,6 +177,9 @@ class MahjongGame {
     }
 
     handParser(this.hand);
+    if (winningHands.length > 0) {
+      console.log('test');
+    }
   }
 
   isOpen() {
