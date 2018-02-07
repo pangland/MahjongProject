@@ -51,7 +51,7 @@ class Hand extends React.Component {
 
     return (
       <div>
-        <ul>
+        <ul className='discards'>
           <h1>Discarded Tiles</h1>
           {discardedTiles}
         </ul>

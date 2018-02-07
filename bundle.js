@@ -18360,7 +18360,7 @@ var Hand = function (_React$Component) {
         null,
         _react2.default.createElement(
           'ul',
-          null,
+          { className: 'discards' },
           _react2.default.createElement(
             'h1',
             null,
@@ -18587,7 +18587,6 @@ var MahjongGame = function () {
   }, {
     key: 'discardTile',
     value: function discardTile(index) {
-      this.newDrawnTile = this.tiles.splice(0, 1)[0];
       if (index === 13) {
         this.discards.push(this.drawnTile);
       } else {
@@ -18745,6 +18744,7 @@ var MahjongGame = function () {
       if (winningHands.length > 0) {
         return true;
       }
+      debugger;
     }
   }, {
     key: 'isOpen',

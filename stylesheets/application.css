@@ -18,3 +18,8 @@ img {
   -webkit-user-drag: none;
   user-select: none;
 }
+
+.discards {
+  flex-wrap: wrap;
+  width: 40%;
+}
