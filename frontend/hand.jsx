@@ -58,6 +58,7 @@ class Hand extends React.Component {
         <ul>
           <h1>Hand</h1>
           {handTiles}
+          <li style={{width: '10px'}}></li>
           <li onClick={this.discardTile.bind(this, 13)}>
             <img src={`./tiles/${drawn.suit}/${drawn.suit}${drawn.rank}.png`}>
             </img>

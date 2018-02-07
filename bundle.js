@@ -18377,6 +18377,7 @@ var Hand = function (_React$Component) {
             'Hand'
           ),
           handTiles,
+          _react2.default.createElement('li', { style: { width: '10px' } }),
           _react2.default.createElement(
             'li',
             { onClick: this.discardTile.bind(this, 13) },
