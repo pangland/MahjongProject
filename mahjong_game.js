@@ -95,7 +95,85 @@ class MahjongGame {
   }
 
   isWinningHand() {
+    // let's ignore yakuman for now
+    const winningHands = [];
+    const pairCount = 0;
+    const tripletCount = 0;
 
+    function handParser(hand, pairCount = 0, storedSequences = []) {
+      function checkRun() {
+        const runIndices = [0];
+        let currentTileCode = hand[index].tileCode;
+        let i = 1;
+        let j = 1;
+        let newTileCode = hand[index + i].tileCode;
+        while (j < 3 && newTileCode <= currentTileCode + j) {
+          const newTileCode = hand[index + i].tileCode;
+          if (currentTileCode === newTileCode) {
+            i += 1;
+          } else if (currentTileCode + 1 === newTileCode){
+            runIndices.push[i];
+            i += 1;
+            j += 1;
+          } else {
+            return [];
+          }
+        }
+        return runIndices;
+      }
+
+      function checkTriplet() {
+        if (
+          hand[1].tileCode === hand[0]
+          && hand[2].tileCode === hand[0]
+        ) {
+          return true;
+        }
+        return false;
+      }
+
+      if (hand.length === 0) {
+        winningHands.push(storedSequences);
+      } else if (hand[0].tileCode < 30) {
+        const runIndices = checkRun();
+        const isTriplet = checkTriplet();
+        if (runIndices.length > 0) {
+          storedSequences.push({
+            type: run,
+            details: hand[0]
+          })
+
+          const cloneHand = hand.slice(0);
+          for (let i = cloneHand.length - 1; i >= 0; i--) {
+            cloneHand.splice(runIndices.pop(), 1);
+          }
+
+          handParser(cloneHand, pairCount, storedSequences);
+        }
+
+        if (isTriplet) {
+          storedSequences.push({
+            type: triplet,
+            details: hand[0]
+          });
+
+          const cloneHand = hand.slice(0);
+          cloneHand.splice(0, 3);
+          handParser(cloneHand, pairCount, storedSequences);
+        }
+
+        if (
+          (pairCount === storedSequences.length || pairCount === 0)
+          && hand[0].tileCode === hand[1].tileCode
+        ) {
+          const cloneHand = hand.slice(0);
+          cloneHand.splice(0,2);
+          handParser(cloneHand, pairCount, storedSequences)
+        }
+      }
+    }
+
+    handParser(this.hand);
   }
 
   isOpen() {
