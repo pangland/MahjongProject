@@ -81,7 +81,6 @@ class MahjongGame {
   }
 
   isKannable() {
-    debugger;
     for (let i = 0; i < this.hand.length - 2; i++) {
       if (this.hand[i].tileCode > this.drawnTile.tileCode) {
         return false;
@@ -104,6 +103,11 @@ class MahjongGame {
     for (let i = 0; i < this.hand.length; i++) {
       if (this.hand[i].tileCode === this.drawnTile.tileCode) {
         this.closedKans.push(this.drawnTile);
+        this.openHand.unshift({
+          info: this.drawnTile,
+          type: 'closedKan'
+        });
+
         this.hand.splice(i, 3);
         this.drawTile();
       }

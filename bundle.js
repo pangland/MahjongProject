@@ -18341,7 +18341,7 @@ var Hand = function (_React$Component) {
       this.setState({
         hand: this.game.hand,
         closedKans: this.game.closedKans,
-        openhand: this.game.openHand,
+        openHand: this.game.openHand,
         discards: this.game.discards,
         drawnTile: this.game.drawnTile
       });
@@ -18351,7 +18351,6 @@ var Hand = function (_React$Component) {
     value: function render() {
       var _this2 = this;
 
-      debugger;
       var handTiles = this.state.hand.map(function (tile, index) {
         var image = './tiles/' + tile.suit + '/' + tile.suit + tile.rank + '.png';
         return _react2.default.createElement(
@@ -18368,6 +18367,37 @@ var Hand = function (_React$Component) {
           { key: index },
           _react2.default.createElement('img', { src: image })
         );
+      });
+
+      var openTiles = this.state.openHand.map(function (tile, index) {
+        if (tile.type === 'closedKan') {
+          var facedown = './tiles/face-down-64px.png';
+          var faceup = './tiles/' + tile.info.suit + '/' + tile.info.suit + tile.info.rank + '.png';
+          return _react2.default.createElement(
+            'div',
+            { className: 'open-hand' },
+            _react2.default.createElement(
+              'li',
+              { key: index * 4 },
+              _react2.default.createElement('img', { src: facedown })
+            ),
+            _react2.default.createElement(
+              'li',
+              { key: index * 4 + 1 },
+              _react2.default.createElement('img', { src: faceup })
+            ),
+            _react2.default.createElement(
+              'li',
+              { key: index * 4 + 2 },
+              _react2.default.createElement('img', { src: faceup })
+            ),
+            _react2.default.createElement(
+              'li',
+              { key: index * 4 + 3 },
+              _react2.default.createElement('img', { src: facedown })
+            )
+          );
+        }
       });
 
       var drawn = this.state.drawnTile;
@@ -18395,22 +18425,30 @@ var Hand = function (_React$Component) {
           discardedTiles
         ),
         _react2.default.createElement(
-          'ul',
-          null,
+          'div',
+          { className: 'hand-wrapper' },
           _react2.default.createElement(
-            'h1',
+            'ul',
             null,
-            'Hand'
+            _react2.default.createElement(
+              'h1',
+              null,
+              'Hand'
+            ),
+            handTiles,
+            _react2.default.createElement('li', { style: { width: '10px' } }),
+            _react2.default.createElement(
+              'li',
+              { onClick: this.discardTile.bind(this, 13) },
+              _react2.default.createElement('img', { src: './tiles/' + drawn.suit + '/' + drawn.suit + drawn.rank + '.png' })
+            )
           ),
-          handTiles,
-          _react2.default.createElement('li', { style: { width: '10px' } }),
           _react2.default.createElement(
-            'li',
-            { onClick: this.discardTile.bind(this, 13) },
-            _react2.default.createElement('img', { src: './tiles/' + drawn.suit + '/' + drawn.suit + drawn.rank + '.png' })
+            'ul',
+            null,
+            openTiles
           )
         ),
-        _react2.default.createElement('ul', null),
         kannable
       );
     }
@@ -18632,7 +18670,6 @@ var MahjongGame = function () {
   }, {
     key: 'isKannable',
     value: function isKannable() {
-      debugger;
       for (var i = 0; i < this.hand.length - 2; i++) {
         if (this.hand[i].tileCode > this.drawnTile.tileCode) {
           return false;
@@ -18652,6 +18689,11 @@ var MahjongGame = function () {
       for (var i = 0; i < this.hand.length; i++) {
         if (this.hand[i].tileCode === this.drawnTile.tileCode) {
           this.closedKans.push(this.drawnTile);
+          this.openHand.unshift({
+            info: this.drawnTile,
+            type: 'closedKan'
+          });
+
           this.hand.splice(i, 3);
           this.drawTile();
         }
