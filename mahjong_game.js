@@ -3,11 +3,13 @@ import { findTileCode } from './util.js';
 class MahjongGame {
   constructor() {
     this.tiles = this.generateTiles();
+    this.deadWall = this.setupWall();
     this.orderStartingHand();
     this.discards = [];
     this.drawnTile = null;
     this.closedKans = [];
     this.openHand = [];
+    this.totalKans = 0;
   }
 
   generateTiles() {
@@ -50,6 +52,13 @@ class MahjongGame {
 
     shuffleTiles();
     return tiles;
+  }
+
+  setupWall() {
+    this.deadWall = {
+      top: this.tiles.splice(0,10),
+      bottom: this.tiles.splice(0,10)
+    };
   }
 
   orderStartingHand() {
@@ -259,6 +268,18 @@ class MahjongGame {
     if (winningHands.length > 0) {
       return true;
     }
+  }
+
+  calculatePoints(winningHand) {
+    let runs = 0;
+    let triplets = 0;
+    let pairs = 0;
+
+
+
+    // winningHand.forEach((sequence) => {
+
+    // }
   }
 
   isOpen() {
