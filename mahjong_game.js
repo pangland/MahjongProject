@@ -274,12 +274,35 @@ class MahjongGame {
     let runs = 0;
     let triplets = 0;
     let pairs = 0;
+    let suitCount = 0;
+    let allHonors = true;
+    let allTerminals = true;
+    let allDragons = true;
 
-
-
-    // winningHand.forEach((sequence) => {
-
+    // handleTriplet(sequence) {
+    //
     // }
+    //
+    // handleRun(sequence) {
+    //
+    // }
+
+
+    winningHand.forEach((sequence) => {
+      switch (sequence.type) {
+        case 'triplet':
+          triplets++;
+          if (sequence.details.tileCode % 10 !== 1 || sequence.details.tileCode !== ) {
+
+          }
+          break;
+        case 'run':
+          runs++;
+          break;
+        default:
+          pairs++;
+      }
+    });
   }
 
   isOpen() {
