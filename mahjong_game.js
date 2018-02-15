@@ -292,9 +292,9 @@ class MahjongGame {
       switch (sequence.type) {
         case 'triplet':
           triplets++;
-          if (sequence.details.tileCode % 10 !== 1 || sequence.details.tileCode !== ) {
-
-          }
+          // if (sequence.details.tileCode % 10 !== 1 || sequence.details.tileCode !== ) {
+          //
+          // }
           break;
         case 'run':
           runs++;
