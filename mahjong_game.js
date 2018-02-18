@@ -113,7 +113,7 @@ class MahjongGame {
       if (this.hand[i].tileCode === this.drawnTile.tileCode) {
         this.closedKans.push(this.drawnTile);
         this.openHand.unshift({
-          info: this.drawnTile,
+          details: this.drawnTile,
           type: 'closedKan'
         });
 
@@ -271,38 +271,147 @@ class MahjongGame {
   }
 
   calculatePoints(winningHand) {
+    const suits = {};
+    const winds = {};
+    const dragons = {};
     let runs = 0;
     let triplets = 0;
     let pairs = 0;
     let suitCount = 0;
+    let dragonCount = 0;
+    let windCount = 0;
     let allHonors = true;
     let allTerminals = true;
-    let allDragons = true;
+    let allIncludeTerminals = true;
+    let pairSuit;
+    let fu = 20;
 
-    // handleTriplet(sequence) {
-    //
-    // }
-    //
-    // handleRun(sequence) {
-    //
-    // }
+    const handleKan = ((sequence) => {
+      triplets++;
+      suits[sequence.details.suit] = true;
+      if (sequence.details.tileCode % 10 === 0) {
+        if (sequence.details.suit === 'wind') {
+          windCount++;
+          winds[sequence.details.rank] = true;
+        } else {
+          dragonCount++;
+          dragons[sequence.details.rank] = true;
+        }
+        fu += 32;
+      } else if (
+        sequence.details.tileCode % 10 !== 1
+        && sequence.details.tileCode % 10 !== 9
+      ) {
+        allTerminals = false;
+        allIncludeTerminals = false;
+        fu += 16;
+      } else {
+        fu += 32;
+      }
+    });
 
+    const handleTriplet = ((sequence) => {
+      triplets++;
+      suits[sequence.details.suit] = true;
+      if (sequence.details.tileCode % 10 === 0) {
+        if (sequence.details.suit === 'wind') {
+          windCount++;
+          winds[sequence.details.rank] = true;
+        } else {
+          dragonCount++;
+          dragons[sequence.details.rank] = true;
+        }
+        fu += 8;
+      } else if (
+        sequence.details.tileCode % 10 !== 1
+        && sequence.details.tileCode % 10 !== 9
+      ) {
+        allTerminals = false;
+        allIncludeTerminals = false;
+        fu += 4;
+      } else {
+        fu += 8;
+      }
+    });
+
+    const handleRun = ((sequence) => {
+      runs++;
+      suits[sequence.details.suit] = true;
+      if (
+        sequence.details.tileCode % 10 !== 1
+        && sequence.details.tileCode % 10 !== 7
+      ) {
+        allIncludeTerminals = false;
+      }
+    });
+
+    const handlePair = ((sequence) => {
+      if (pairs === 0) {
+        suits[sequence.details.suit] = true;
+      } else {
+        pairSuit = false;
+      }
+
+      if (
+        sequence.details.suit % 10 !== 1
+        && sequence.details.suit % 10 !== 0
+        && sequence.details.suit % 10 !== 9
+      ) {
+        allTerminals = false;
+        allIncludeTerminals = false;
+      }
+    });
+
+    this.closedKans.forEach((sequence) => {
+      handleKan(sequence);
+    });
 
     winningHand.forEach((sequence) => {
       switch (sequence.type) {
         case 'triplet':
-          triplets++;
-          // if (sequence.details.tileCode % 10 !== 1 || sequence.details.tileCode !== ) {
-          //
-          // }
+          handleTriplet(sequence);
           break;
         case 'run':
-          runs++;
+          handleRun(sequence);
           break;
         default:
-          pairs++;
+          handlePair(sequence);
       }
     });
+
+    const winConditions = [];
+
+    if (this.closedKans.length === 4) {
+      winConditions.push({
+        japaneseName: 'Suu kantsu',
+        englishName: 'Four quads',
+        value: 8000
+      });
+    } else if (this.closedKans.length + triplets === 4) {
+      winConditions.push({
+        japaneseName: 'suu ankou',
+        englishName: 'Four concealed triplets',
+        value: 8000
+      });
+    }
+
+    if (windCount === 4) {
+      winConditions.push({
+        japaneseName: 'daisuushii',
+        englishName: 'Big four winds',
+        value: 16000
+      });
+    } else if (windCount === 3 && pairSuit === 'wind') {
+      winConditions.push({
+        japaneseName: 'shousuushii',
+        englishName: 'Little four winds',
+        value: 8000
+      });
+    }
+
+
+
+
   }
 
   isOpen() {
