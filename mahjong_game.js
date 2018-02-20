@@ -281,7 +281,6 @@ class MahjongGame {
     let runs = 0;
     let melds = 0;
     let pairs = 0;
-    let suitCount = 0;
     let dragonCount = 0;
     let windCount = 0;
     let allHonors = true;
@@ -358,13 +357,53 @@ class MahjongGame {
       }
     });
 
+    const isNineGates = () => {
+      if (Object.keys(suits).length > 1 || allHonors | this.closedKans.length > 0) {
+        return false;
+      }
+
+      const baseline = [3, 1, 1, 1, 1, 1, 1, 1, 3];
+      const numbers = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+      winningHand.forEach((sequence) => {
+        const digit = sequence.details.tileCode % 10;
+        switch (sequence.type) {
+          case 'triplet':
+            if (digit !== 1 && digit !== 9) {
+              return false;
+            }
+            numbers[digit - 1] += 3;
+            break;
+          case 'run':
+            numbers[digit - 1] += 1;
+            numbers[digit] += 1;
+            numbers[digit + 1] += 1;
+            break;
+          case 'pair':
+            numbers[digit - 1] += 2;
+        }
+      });
+
+      let excessCounted = false;
+      for (let i = 0; i < baseline.length; i++) {
+        if (numbers[i] < baseline[i] || numbers[i] > baseline[i] + 1) {
+          return false;
+        }
+
+        if (numbers[i] === baseline[i] + 1 && excessCounted) {
+          return false;
+        } else if (numbers[i] === baseline[i] + 1) {
+          excessCounted = true;
+        }
+      }
+    };
+
     this.closedKans.forEach((sequence) => {
       handleMeld(sequence);
     });
 
     winningHand.forEach((sequence) => {
       switch (sequence.type) {
-        case 'triplet':
         case 'closedKan':
           handleMeld(sequence);
           break;
@@ -442,6 +481,10 @@ class MahjongGame {
 
     if (winConditions.length > 0) {
       return winConditions;
+    }
+
+    if (isNineGates()) {
+
     }
 
 
