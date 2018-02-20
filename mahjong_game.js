@@ -278,8 +278,11 @@ class MahjongGame {
     const winds = {};
     const dragons = {};
     const ranks = {};
-    let runs = 0;
-    let melds = 0;
+    const runs = {};
+
+
+    let runCount = 0;
+    let meldCount = 0;
     let pairs = 0;
     let dragonCount = 0;
     let windCount = 0;
@@ -291,7 +294,7 @@ class MahjongGame {
 
     const handleMeld = ((sequence) => {
       const fuMultiplier = sequence.type === 'triplet' ? 1 : 4;
-      melds++;
+      meldCount++;
       suits[sequence.details.suit] = true;
 
       if (!allGreens.includes(sequence.details.tileCode)) {
@@ -318,10 +321,16 @@ class MahjongGame {
     });
 
     const handleRun = ((sequence) => {
-      runs++;
+      runCount++;
       allTerminals = false;
       allHonors = false;
       suits[sequence.details.suit] = true;
+
+      if (runs[sequence.details.tileCode]) {
+        runs[sequence.details.tileCode]++;
+      } else {
+        runs[sequence.details.tileCode] = 1;
+      }
 
       if (sequence.details.tileCode !== 22) {
         isGreen = false;
@@ -358,7 +367,7 @@ class MahjongGame {
     });
 
     const isNineGates = () => {
-      if (Object.keys(suits).length > 1 || allHonors | this.closedKans.length > 0) {
+      if (Object.keys(suits).length > 1) {
         return false;
       }
 
@@ -381,6 +390,9 @@ class MahjongGame {
             break;
           case 'pair':
             numbers[digit - 1] += 2;
+            break;
+          case 'closedKan':
+            return false;
         }
       });
 
@@ -398,6 +410,17 @@ class MahjongGame {
       }
     };
 
+    const isDoubleDoubleRun = () => {
+      let doubleRuns = 0;
+      for (let run in runs) {
+        if (runs[run] > 1) {
+          doubleRuns++;
+        }
+      }
+
+      return doubleRuns >= 2 ? true : false;
+    };
+    
     this.closedKans.forEach((sequence) => {
       handleMeld(sequence);
     });
@@ -423,7 +446,7 @@ class MahjongGame {
         englishName: 'Four quads',
         value: 8000
       });
-    } else if (melds === 4) {
+    } else if (meldCount === 4) {
       winConditions.push({
         japaneseName: 'suu ankou',
         englishName: 'Four concealed triplets',
@@ -490,14 +513,49 @@ class MahjongGame {
     if (winningHand.length === 2) {
       winConditions.push({
         japaneseName: 'kokushi musou',
-        englishName: 'Thirteen orphans',
+        englishName: 'Thirteen Orphans',
         points: 8000
       });
     }
 
+    // STOP HERE IF THERE WERE ANY YAKUMAN; NO NEED TO CONTININUE
     if (winConditions.length > 0) {
       return winConditions;
     }
+
+    // REGULAR OLD YAKU
+    if (Object.keys(suits).length === 1) {
+      winConditions.push({
+        japaneseName: 'Chinitsu',
+        englishName: 'Full Flush',
+        han: 6
+      });
+    }
+
+    if (isDoubleDoubleRon()) {
+      winConditions.push({
+        japaneseName: 'Ryanpeikou',
+        englishName: 'Double-Double Run',
+        han: 3
+      });
+    }
+
+    if (allIncludeTerminals) {
+      winConditions.push({
+        japaneseName: 'Juchan tayou',
+        englishName: 'Terminals in each set',
+        han: 3
+      });
+    }
+
+
+    // if (dragonCount === 2 && pairSuit === 'dragon') {
+    //   winConditions.push
+    // }
+
+
+
+
   }
 
   isOpen() {
