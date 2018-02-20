@@ -479,15 +479,25 @@ class MahjongGame {
       });
     }
 
+    if (isNineGates()) {
+      winConditions.push({
+        japaneseName: 'chuuren poutou',
+        englishName: 'Nine gates',
+        points: 8000
+      });
+    }
+
+    if (winningHand.length === 2) {
+      winConditions.push({
+        japaneseName: 'kokushi musou',
+        englishName: 'Thirteen orphans',
+        points: 8000
+      });
+    }
+
     if (winConditions.length > 0) {
       return winConditions;
     }
-
-    if (isNineGates()) {
-
-    }
-
-
   }
 
   isOpen() {
