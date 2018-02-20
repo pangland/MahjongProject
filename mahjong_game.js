@@ -271,11 +271,15 @@ class MahjongGame {
   }
 
   calculatePoints(winningHand) {
+    const allGreens = [22, 23, 24, 26, 28, 90];
+    let isGreen = true;
+
     const suits = {};
     const winds = {};
     const dragons = {};
+    const ranks = {};
     let runs = 0;
-    let triplets = 0;
+    let melds = 0;
     let pairs = 0;
     let suitCount = 0;
     let dragonCount = 0;
@@ -286,57 +290,44 @@ class MahjongGame {
     let pairSuit;
     let fu = 20;
 
-    const handleKan = ((sequence) => {
-      triplets++;
+    const handleMeld = ((sequence) => {
+      const fuMultiplier = sequence.type === 'triplet' ? 1 : 4;
+      melds++;
       suits[sequence.details.suit] = true;
-      if (sequence.details.tileCode % 10 === 0) {
-        if (sequence.details.suit === 'wind') {
-          windCount++;
-          winds[sequence.details.rank] = true;
-        } else {
-          dragonCount++;
-          dragons[sequence.details.rank] = true;
-        }
-        fu += 32;
-      } else if (
-        sequence.details.tileCode % 10 !== 1
-        && sequence.details.tileCode % 10 !== 9
-      ) {
-        allTerminals = false;
-        allIncludeTerminals = false;
-        fu += 16;
-      } else {
-        fu += 32;
-      }
-    });
 
-    const handleTriplet = ((sequence) => {
-      triplets++;
-      suits[sequence.details.suit] = true;
+      if (!allGreens.includes(sequence.details.tileCode)) {
+        isGreen = false;
+      }
+
       if (sequence.details.tileCode % 10 === 0) {
-        if (sequence.details.suit === 'wind') {
-          windCount++;
-          winds[sequence.details.rank] = true;
-        } else {
-          dragonCount++;
-          dragons[sequence.details.rank] = true;
-        }
-        fu += 8;
+        allTerminals = false;
+        allIncludeTerminals = false;
+        sequence.details.suit === 'wind' ? windCount++ : dragonCount++;
+        fu += 8 * fuMultiplier;
       } else if (
         sequence.details.tileCode % 10 !== 1
         && sequence.details.tileCode % 10 !== 9
       ) {
+        allHonors = false;
         allTerminals = false;
         allIncludeTerminals = false;
-        fu += 4;
+        fu += 4 * fuMultiplier;
       } else {
-        fu += 8;
+        allHonors = false;
+        fu += 8 * fuMultiplier;
       }
     });
 
     const handleRun = ((sequence) => {
       runs++;
+      allTerminals = false;
+      allHonors = false;
       suits[sequence.details.suit] = true;
+
+      if (sequence.details.tileCode !== 22) {
+        isGreen = false;
+      }
+
       if (
         sequence.details.tileCode % 10 !== 1
         && sequence.details.tileCode % 10 !== 7
@@ -352,24 +343,30 @@ class MahjongGame {
         pairSuit = false;
       }
 
+      if (!allGreens.includes(sequence.details.tileCode)) {
+        isGreen = false;
+      }
+
       if (
         sequence.details.suit % 10 !== 1
-        && sequence.details.suit % 10 !== 0
         && sequence.details.suit % 10 !== 9
       ) {
         allTerminals = false;
         allIncludeTerminals = false;
+      } else if (sequence.details.suit % 10 !== 0) {
+        allHonors = false;
       }
     });
 
     this.closedKans.forEach((sequence) => {
-      handleKan(sequence);
+      handleMeld(sequence);
     });
 
     winningHand.forEach((sequence) => {
       switch (sequence.type) {
         case 'triplet':
-          handleTriplet(sequence);
+        case 'closedKan':
+          handleMeld(sequence);
           break;
         case 'run':
           handleRun(sequence);
@@ -387,10 +384,24 @@ class MahjongGame {
         englishName: 'Four quads',
         value: 8000
       });
-    } else if (this.closedKans.length + triplets === 4) {
+    } else if (melds === 4) {
       winConditions.push({
         japaneseName: 'suu ankou',
         englishName: 'Four concealed triplets',
+        value: 8000
+      });
+    }
+
+    if (allHonors) {
+      winConditions.push({
+        japaneseName: 'tsuu iisou',
+        englishName: 'All honors',
+        value: 8000
+      });
+    } else if (allTerminals) {
+      winConditions.push({
+        japaneseName: 'chinroutou',
+        englishNames: 'All terminals',
         value: 8000
       });
     }
@@ -407,9 +418,31 @@ class MahjongGame {
         englishName: 'Little four winds',
         value: 8000
       });
+    } else if (dragonCount === 3) {
+      winConditions.push({
+        japaneseName: 'daisangen',
+        englishName: 'Big three dragons',
+        value: 8000
+      });
+    } else if (allTerminals) {
+      winConditions.push({
+        japaneseName: 'chinroutou',
+        englishName: 'All terminals',
+        value: 8000
+      });
     }
 
+    if (isGreen) {
+      winConditions.push({
+        japaneseName: 'ryuuisou',
+        englishName: 'All green',
+        points: 8000
+      });
+    }
 
+    if (winConditions.length > 0) {
+      return winConditions;
+    }
 
 
   }
