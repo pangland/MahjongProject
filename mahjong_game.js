@@ -505,6 +505,18 @@ class MahjongGame {
       return true;
     };
 
+    const isTanyao = () => {
+      winningHand.sequences.forEach((sequence) => {
+        const digit = sequence.details.tileCode % 10;
+        const type = sequence.details.type;
+        if (digit === 1 || digit === 9 || (digit === 7 && type !== 'run')) {
+          return false;
+        }
+      });
+
+      return true;
+    };
+
     winningHand.forEach((sequence) => {
       switch (sequence.type) {
         case 'closedKan':
@@ -704,6 +716,27 @@ class MahjongGame {
         englishName: 'Triple Run',
         han: 2
       });
+    }
+
+    if (isTanyao()) {
+      winConditions.push({
+        japaneseName: 'Tanyao',
+        englishName: 'All Simples',
+        han: 1
+      });
+    }
+
+    if (runCount === 4 && pairSuit !== 'dragon' && pairSuit !== 'wind') {
+      fu = 20;
+      winConditions.push({
+        japaneseName: 'Pinfu',
+        englishName: 'No points',
+        han: 1
+      });
+    }
+
+    if (pairs === 7) {
+      fu = 25;
     }
   }
 
