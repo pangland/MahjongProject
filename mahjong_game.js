@@ -279,6 +279,7 @@ class MahjongGame {
     const dragons = {};
     const ranks = {};
     const runs = {};
+    const melds = {};
 
 
     let runCount = 0;
@@ -296,6 +297,12 @@ class MahjongGame {
       const fuMultiplier = sequence.type === 'triplet' ? 1 : 4;
       meldCount++;
       suits[sequence.details.suit] = true;
+
+      if (melds[sequence.details.tileCode]) {
+        melds[sequence.details.tileCode]++;
+      } else {
+        melds[sequence.details.tileCode] = 1;
+      }
 
       if (!allGreens.includes(sequence.details.tileCode)) {
         isGreen = false;
@@ -410,7 +417,7 @@ class MahjongGame {
       }
     };
 
-    const isDoubleDoubleRun = () => {
+    const countDoubleRuns = () => {
       let doubleRuns = 0;
       for (let run in runs) {
         if (runs[run] > 1) {
@@ -418,16 +425,90 @@ class MahjongGame {
         }
       }
 
-      return doubleRuns >= 2 ? true : false;
+      return doubleRuns;
     };
-    
-    this.closedKans.forEach((sequence) => {
-      handleMeld(sequence);
-    });
+
+    const isHonitsu = () => {
+      let numberedSuitCount = 0;
+      for (let suit in suits) {
+        if (suit === 'number' || suit === 'bamboo' || suit === 'pin') {
+          numberedSuitCount++;
+        }
+      }
+
+      return numberedSuitCount === 1 ? true : false;
+    };
+
+    const hasThreeLikeSequences = (type) => {
+      const rankCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+      const sequences = type === 'meld' ? melds : runs;
+
+      Object.keys(sequences).filter((sequence) => {
+        const digit = sequence.details.tileCode % 10;
+        if (digit > 0) {
+          rankCounts[digit - 1] += 1;
+        }
+      });
+
+      rankCounts.forEach((count) => {
+        if (count === 3) {
+          return true;
+        }
+      });
+
+      return false;
+    };
+
+    const isChantaiyao = () => {
+      winningHand.forEach((sequence) => {
+        const digit = sequence.details.tileCode % 10;
+        if (digit === 0 || digit === 8 || (digit > 1 && digit) < 7) {
+          return false;
+        } else if (digit === 7 && sequence.details.type !== 'run') {
+          return false;
+        }
+      });
+
+      return true;
+    };
+
+    const isIkkitsuukan = () => {
+      if (runCount < 3) {
+        return false;
+      }
+
+      const tileCodes = [];
+      for (let run in runs) {
+        if (run.details.tileCode > 0) {
+          tileCodes.push(run.details.tileCode);
+        }
+      }
+
+      tileCodes.sort((a, b) => {
+        return a.tileCode <  b.tileCode ? -1 : 1;
+      });
+
+      const options = [1, 4, 7];
+      let optionIndex = 0;
+      let freebeeUsed = false;
+      for (let i = 0; i < tileCodes.length; i++) {
+        if (tileCodes[0] % 10 !== options[optionIndex] && freebeeUsed) {
+          return false;
+        } else if (tileCodes[0] % 10 !== options[optionIndex]) {
+          optionIndex = 0;
+          freebeeUsed = true;
+        } else {
+          options++;
+        }
+      }
+
+      return true;
+    };
 
     winningHand.forEach((sequence) => {
       switch (sequence.type) {
         case 'closedKan':
+        case 'triplet':
           handleMeld(sequence);
           break;
         case 'run':
@@ -530,13 +611,26 @@ class MahjongGame {
         englishName: 'Full Flush',
         han: 6
       });
+    } else if (isHonitsu()) {
+      winConditions.push({
+        japaneseName: 'Honitsu',
+        englishName: 'Dirty Flush',
+        han: 3
+      });
     }
 
-    if (isDoubleDoubleRon()) {
+    const doubleRunCount = countDoubleRuns();
+    if (doubleRunCount === 2) {
       winConditions.push({
         japaneseName: 'Ryanpeikou',
         englishName: 'Double-Double Run',
         han: 3
+      });
+    } else if (doubleRunCount === 1) {
+      winConditions.push({
+        japaneseName: 'Iipekou',
+        englishName: 'Double Run',
+        han: 1
       });
     }
 
@@ -548,15 +642,73 @@ class MahjongGame {
       });
     }
 
+    if (dragonCount === 2 && pairSuit === 'dragon') {
+      winConditions.push({
+        japaneseName: 'Shou Sangen',
+        englishName: 'Little Three Dragons',
+        han: 2
+      });
+    }
 
-    // if (dragonCount === 2 && pairSuit === 'dragon') {
-    //   winConditions.push
-    // }
+    if (pairs === 7) {
+      winConditions.push({
+        japaneseName: 'chiitoitsu',
+        englishName: 'Seven Pairs',
+        han: 2
+      });
+    }
 
+    if (this.closedKans.length === 3) {
+      winConditions.push({
+        japaneseName: 'San kantsu',
+        englishName: 'Three quads',
+        han: 2
+      });
+    } else if (meldCount === 3) {
+      winConditions.push({
+        japaneseName: 'San ankou',
+        englishName: 'Three concealed triplets',
+        han: 2
+      });
+    }
 
+    if (hasThreeLikeSequences('meld')) {
+      winConditions.push({
+        japaneseName: 'Sanshoku doukou',
+        englishName: 'Three color triplets',
+        han: 2
+      });
+    }
 
+    // ONCE I HAVE OPEN HANDS I NEED toitoiho, honroutou,
 
+    if (isChantaiyao()) {
+      winConditions.push({
+        japaneseName: 'Chantaiyao',
+        englishName: 'Terminals or honors in each set',
+        han: 2
+      });
+    }
+
+    if (isIkkitsuukan()) {
+      winConditions.push({
+        japaneseName: 'Ikkitsuukan',
+        englishName: 'Straight',
+        han: 2
+      });
+    }
+
+    if (hasThreeLikeSequences('run')) {
+      winConditions.push({
+        japaneseName: 'Sanshoku doujin',
+        englishName: 'Triple Run',
+        han: 2
+      });
+    }
   }
+
+
+
 
   isOpen() {
     return false;
