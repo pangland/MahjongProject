@@ -181,6 +181,22 @@ class MahjongGame {
       return a.tileCode <  b.tileCode ? -1 : 1;
     });
 
+    function thirteenOrphanParser(hand) {
+      const orphans = {};
+      hand.forEach((tile) => {
+        const digit = tile.tileCode % 10;
+        if (digit !== 1 && digit !== 9 && digit !== 0) {
+          return [];
+        } else if (!orphans[tile.tileCode]) {
+          orphans[tile.tileCode] = true;
+        }
+      });
+
+      if (Object.keys(orphans).length === 13) {
+        winningHands.push({ type: 'thirteen orphans' });
+      }
+    }
+
     function handParser(hand, pairCount = 0, storedSequences = []) {
       function checkRun() {
         const runIndices = [0];
@@ -265,6 +281,7 @@ class MahjongGame {
     }
 
     handParser(handPlusDraw);
+    thirteenOrphanParser(handPlusDraw);
     if (winningHands.length > 0) {
       return true;
     }
@@ -603,7 +620,7 @@ class MahjongGame {
       });
     }
 
-    if (winningHand.length === 2) {
+    if (winningHand.length === 1) {
       winConditions.push({
         japaneseName: 'kokushi musou',
         englishName: 'Thirteen Orphans',
@@ -740,31 +757,28 @@ class MahjongGame {
     }
   }
 
-
-
-
   isOpen() {
     return false;
   }
 
-  // isTenpai() {
-  //   const tileCodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15,
-  //     16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 40, 50, 60,
-  //     70, 80, 90, 100];
-  //
-  //   for (let i = 0; i < this.hand.length; i++) {
-  //     let savedTileCode = this.hand[i].tileCode;
-  //     tileCodes.forEach((tileCode) => {
-  //       this.hand[i].tileCode = tileCode;
-  //       if (this.isWinningHand()) {
-  //         break;
-  //       }
-  //     });
-  //     this.hand[i].tileCode = savedTileCode;
-  //   }
-  //
-  //   this.isWinningHand();
-  // }
-}
+//   isTenpai() {
+//     const tileCodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15,
+//       16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 40, 50, 60,
+//       70, 80, 90, 100];
+//
+//     for (let i = 0; i < this.hand.length; i++) {
+//       const savedTileCode = this.hand[i].tileCode;
+//       tileCodes.forEach((tileCode) => {
+//         this.hand[i].tileCode = tileCode;
+//         if (this.isWinningHand()) {
+//           break;
+//         }
+//       });
+//       this.hand[i].tileCode = savedTileCode;
+//     }
+//
+//     this.isWinningHand();
+//   }
+// }
 
 export default MahjongGame;
