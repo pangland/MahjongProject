@@ -23721,7 +23721,7 @@ var Navbar = function (_React$Component) {
           _react2.default.createElement(
             'button',
             null,
-            'Base Page'
+            'Home Page'
           )
         ),
         _react2.default.createElement(

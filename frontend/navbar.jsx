@@ -6,7 +6,7 @@ class Navbar extends React.Component {
     return (
       <div className='navbar'>
         <Link to={'/'}>
-          <button>Base Page</button>
+          <button>Home Page</button>
         </Link>
 
         <Link to={'/classroom'}>
