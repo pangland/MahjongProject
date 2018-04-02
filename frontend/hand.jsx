@@ -1,52 +1,46 @@
 import React from 'react';
-import { generateTiles } from '../util.js';
-// maybe a tile class later
+import { generateTiles } from '../util';
+import MahjongGame from '../mahjong_game';
 
 class Hand extends React.Component {
   constructor(props) {
     super(props);
-    this.allTiles = generateTiles();
-    this.orderStartingHand = this.orderStartingHand.bind(this);
+    this.game = new MahjongGame;
     this.discardTile = this.discardTile.bind(this);
-    this.orderStartingHand();
-  }
-
-  orderStartingHand() {
-    const hand = this.allTiles.splice(0,13);
-    hand.sort((a, b) => {
-      return a.tileCode <  b.tileCode ? -1 : 1;
-    });
+    this.closedKan = this.closedKan.bind(this);
+    this.game.drawTile();
 
     this.state = {
-      hand: hand,
-      drawnTile: this.allTiles.splice(0,1)[0],
-      discards: []
+      hand: this.game.hand,
+      closedKans: this.game.closedKans,
+      openHand: this.game.openHand,
+      drawnTile: this.game.drawnTile,
+      discards: this.game.discards,
+      kannable: this.game.isKannable,
     };
   }
 
   discardTile(index, e) {
-    const discards = this.state.discards;
-    const newDrawnTile = this.allTiles.splice(0,1)[0];
-    if (index === 13) {
-      discards.push(this.state.drawnTile);
-      this.setState({
-        discards: discards,
-        drawnTile: newDrawnTile
-      });
-    } else {
-      const hand = this.state.hand;
-      discards.push(hand[index]);
-      hand.splice(index, 1);
-      hand.push(this.state.drawnTile);
-      hand.sort((a, b) => {
-        return a.tileCode <  b.tileCode ? -1 : 1;
-      });
-      this.setState({
-        hand: hand,
-        discards: discards,
-        drawnTile: newDrawnTile
-      });
-    }
+    this.game.discardTile(index);
+    this.game.drawTile();
+    this.setState({
+      hand: this.game.hand,
+      discards: this.game.discards,
+      drawnTile: this.game.drawnTile
+    });
+
+    this.game.isWinningHand();
+  }
+
+  closedKan(e) {
+    this.game.closedKan();
+    this.setState({
+      hand: this.game.hand,
+      closedKans: this.game.closedKans,
+      openHand: this.game.openHand,
+      discards: this.game.discards,
+      drawnTile: this.game.drawnTile
+    });
   }
 
   render() {
@@ -68,23 +62,57 @@ class Hand extends React.Component {
       );
     });
 
+    const openTiles = this.state.openHand.map((tile, index) => {
+      if (tile.type === 'closedKan') {
+        const facedown = `./tiles/face-down-64px.png`;
+        const faceup = `./tiles/${tile.info.suit}/${tile.info.suit}${tile.info.rank}.png`;
+        return (
+          <div className='open-hand'>
+            <li key={index * 4}>
+              <img src={facedown}></img>
+            </li>
+            <li key={index * 4 + 1}>
+              <img src={faceup}></img>
+            </li>
+            <li key={index * 4 + 2}>
+              <img src={faceup}></img>
+            </li>
+            <li key={index * 4 + 3}>
+              <img src={facedown}></img>
+            </li>
+          </div>
+        );
+      }
+    });
+
     const drawn = this.state.drawnTile;
 
-    debugger;
+    let kannable;
+    if (this.game.isKannable()) {
+      kannable = <button onClick={this.closedKan}>Kan</button>;
+    }
 
     return (
       <div>
-        <ul>
+        <ul className='discards'>
           <h1>Discarded Tiles</h1>
           {discardedTiles}
         </ul>
-        <ul>
-          <h1>Hand</h1>
-          {handTiles}
-          <li onClick={this.discardTile.bind(this, 13)}>
-            <img src={`./tiles/${drawn.suit}/${drawn.suit}${drawn.rank}.png`}></img>
-          </li>
-        </ul>
+        <div className='hand-wrapper'>
+          <ul>
+            <h1>Hand</h1>
+            {handTiles}
+            <li style={{width: '10px'}}></li>
+            <li onClick={this.discardTile.bind(this, 13)}>
+              <img src={`./tiles/${drawn.suit}/${drawn.suit}${drawn.rank}.png`}>
+              </img>
+            </li>
+          </ul>
+          <ul>
+            {openTiles}
+          </ul>
+        </div>
+        {kannable}
       </div>
     );
   }

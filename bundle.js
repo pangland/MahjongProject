@@ -23392,6 +23392,10 @@ var _react2 = _interopRequireDefault(_react);
 
 var _util = __webpack_require__(77);
 
+var _mahjong_game = __webpack_require__(79);
+
+var _mahjong_game2 = _interopRequireDefault(_mahjong_game);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -23399,8 +23403,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-// maybe a tile class later
 
 var Hand = function (_React$Component) {
   _inherits(Hand, _React$Component);
@@ -23410,52 +23412,46 @@ var Hand = function (_React$Component) {
 
     var _this = _possibleConstructorReturn(this, (Hand.__proto__ || Object.getPrototypeOf(Hand)).call(this, props));
 
-    _this.allTiles = (0, _util.generateTiles)();
-    _this.orderStartingHand = _this.orderStartingHand.bind(_this);
+    _this.game = new _mahjong_game2.default();
     _this.discardTile = _this.discardTile.bind(_this);
-    _this.orderStartingHand();
+    _this.closedKan = _this.closedKan.bind(_this);
+    _this.game.drawTile();
+
+    _this.state = {
+      hand: _this.game.hand,
+      closedKans: _this.game.closedKans,
+      openHand: _this.game.openHand,
+      drawnTile: _this.game.drawnTile,
+      discards: _this.game.discards,
+      kannable: _this.game.isKannable
+    };
     return _this;
   }
 
   _createClass(Hand, [{
-    key: 'orderStartingHand',
-    value: function orderStartingHand() {
-      var hand = this.allTiles.splice(0, 13);
-      hand.sort(function (a, b) {
-        return a.tileCode < b.tileCode ? -1 : 1;
-      });
-
-      this.state = {
-        hand: hand,
-        drawnTile: this.allTiles.splice(0, 1)[0],
-        discards: []
-      };
-    }
-  }, {
     key: 'discardTile',
     value: function discardTile(index, e) {
-      var discards = this.state.discards;
-      var newDrawnTile = this.allTiles.splice(0, 1)[0];
-      if (index === 13) {
-        discards.push(this.state.drawnTile);
-        this.setState({
-          discards: discards,
-          drawnTile: newDrawnTile
-        });
-      } else {
-        var hand = this.state.hand;
-        discards.push(hand[index]);
-        hand.splice(index, 1);
-        hand.push(this.state.drawnTile);
-        hand.sort(function (a, b) {
-          return a.tileCode < b.tileCode ? -1 : 1;
-        });
-        this.setState({
-          hand: hand,
-          discards: discards,
-          drawnTile: newDrawnTile
-        });
-      }
+      this.game.discardTile(index);
+      this.game.drawTile();
+      this.setState({
+        hand: this.game.hand,
+        discards: this.game.discards,
+        drawnTile: this.game.drawnTile
+      });
+
+      this.game.isWinningHand();
+    }
+  }, {
+    key: 'closedKan',
+    value: function closedKan(e) {
+      this.game.closedKan();
+      this.setState({
+        hand: this.game.hand,
+        closedKans: this.game.closedKans,
+        openHand: this.game.openHand,
+        discards: this.game.discards,
+        drawnTile: this.game.drawnTile
+      });
     }
   }, {
     key: 'render',
@@ -23480,16 +23476,54 @@ var Hand = function (_React$Component) {
         );
       });
 
+      var openTiles = this.state.openHand.map(function (tile, index) {
+        if (tile.type === 'closedKan') {
+          var facedown = './tiles/face-down-64px.png';
+          var faceup = './tiles/' + tile.info.suit + '/' + tile.info.suit + tile.info.rank + '.png';
+          return _react2.default.createElement(
+            'div',
+            { className: 'open-hand' },
+            _react2.default.createElement(
+              'li',
+              { key: index * 4 },
+              _react2.default.createElement('img', { src: facedown })
+            ),
+            _react2.default.createElement(
+              'li',
+              { key: index * 4 + 1 },
+              _react2.default.createElement('img', { src: faceup })
+            ),
+            _react2.default.createElement(
+              'li',
+              { key: index * 4 + 2 },
+              _react2.default.createElement('img', { src: faceup })
+            ),
+            _react2.default.createElement(
+              'li',
+              { key: index * 4 + 3 },
+              _react2.default.createElement('img', { src: facedown })
+            )
+          );
+        }
+      });
+
       var drawn = this.state.drawnTile;
 
-      debugger;
+      var kannable = void 0;
+      if (this.game.isKannable()) {
+        kannable = _react2.default.createElement(
+          'button',
+          { onClick: this.closedKan },
+          'Kan'
+        );
+      }
 
       return _react2.default.createElement(
         'div',
         null,
         _react2.default.createElement(
           'ul',
-          null,
+          { className: 'discards' },
           _react2.default.createElement(
             'h1',
             null,
@@ -23498,20 +23532,31 @@ var Hand = function (_React$Component) {
           discardedTiles
         ),
         _react2.default.createElement(
-          'ul',
-          null,
+          'div',
+          { className: 'hand-wrapper' },
           _react2.default.createElement(
-            'h1',
+            'ul',
             null,
-            'Hand'
+            _react2.default.createElement(
+              'h1',
+              null,
+              'Hand'
+            ),
+            handTiles,
+            _react2.default.createElement('li', { style: { width: '10px' } }),
+            _react2.default.createElement(
+              'li',
+              { onClick: this.discardTile.bind(this, 13) },
+              _react2.default.createElement('img', { src: './tiles/' + drawn.suit + '/' + drawn.suit + drawn.rank + '.png' })
+            )
           ),
-          handTiles,
           _react2.default.createElement(
-            'li',
-            { onClick: this.discardTile.bind(this, 13) },
-            _react2.default.createElement('img', { src: './tiles/' + drawn.suit + '/' + drawn.suit + drawn.rank + '.png' })
+            'ul',
+            null,
+            openTiles
           )
-        )
+        ),
+        kannable
       );
     }
   }]);
@@ -23692,6 +23737,808 @@ var Navbar = function (_React$Component) {
 }(_react2.default.Component);
 
 exports.default = Navbar;
+
+/***/ }),
+/* 79 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _util = __webpack_require__(77);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var MahjongGame = function () {
+  function MahjongGame() {
+    _classCallCheck(this, MahjongGame);
+
+    this.tiles = this.generateTiles();
+    this.deadWall = this.setupWall();
+    this.orderStartingHand();
+    this.discards = [];
+    this.drawnTile = null;
+    this.closedKans = [];
+    this.openHand = [];
+    this.totalKans = 0;
+  }
+
+  _createClass(MahjongGame, [{
+    key: 'generateTiles',
+    value: function generateTiles() {
+      var numberValues = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+      var numberedSuits = ['bamboo', 'number', 'pin'];
+      var dragonValues = ['red', 'white', 'green'];
+      var windValues = ['east', 'south', 'west', 'north'];
+      var tiles = [];
+
+      function makeFourCopies(rank, suit) {
+        for (var i = 0; i < 4; i++) {
+          tiles.push({
+            rank: rank,
+            suit: suit,
+            tileCode: (0, _util.findTileCode)(rank, suit)
+          });
+        }
+      }
+
+      function shuffleTiles() {
+        for (var i = 0; i < tiles.length; i++) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var _ref = [tiles[j], tiles[i]];
+          tiles[i] = _ref[0];
+          tiles[j] = _ref[1];
+        }
+      }
+
+      numberValues.forEach(function (rank) {
+        numberedSuits.forEach(function (suit) {
+          makeFourCopies(rank, suit);
+        });
+      });
+
+      dragonValues.forEach(function (rank) {
+        makeFourCopies(rank, 'dragon');
+      });
+
+      windValues.forEach(function (rank) {
+        makeFourCopies(rank, 'wind');
+      });
+
+      shuffleTiles();
+      return tiles;
+    }
+  }, {
+    key: 'setupWall',
+    value: function setupWall() {
+      this.deadWall = {
+        top: this.tiles.splice(0, 10),
+        bottom: this.tiles.splice(0, 10)
+      };
+    }
+  }, {
+    key: 'orderStartingHand',
+    value: function orderStartingHand() {
+      var hand = this.tiles.splice(0, 13);
+      hand.sort(function (a, b) {
+        return a.tileCode < b.tileCode ? -1 : 1;
+      });
+
+      this.hand = hand;
+    }
+  }, {
+    key: 'drawTile',
+    value: function drawTile() {
+      this.drawnTile = this.tiles.splice(0, 1)[0];
+    }
+  }, {
+    key: 'discardTile',
+    value: function discardTile(index) {
+      if (index === 13) {
+        this.discards.push(this.drawnTile);
+      } else {
+        var hand = this.hand;
+        this.discards.push(hand[index]);
+        hand.splice(index, 1);
+        hand.push(this.drawnTile);
+        hand.sort(function (a, b) {
+          return a.tileCode < b.tileCode ? -1 : 1;
+        });
+        this.hand = hand;
+      }
+    }
+  }, {
+    key: 'isKannable',
+    value: function isKannable() {
+      for (var i = 0; i < this.hand.length - 2; i++) {
+        if (this.hand[i].tileCode > this.drawnTile.tileCode) {
+          return false;
+        }
+
+        if (this.hand[i].tileCode === this.drawnTile.tileCode && this.hand[i].tileCode === this.hand[i + 1].tileCode && this.hand[i + 1].tileCode === this.hand[i + 2].tileCode) {
+          return true;
+        } else if (this.hand[i].tileCode === this.drawnTile.tileCode) {
+          return false;
+        }
+      }
+      return false;
+    }
+  }, {
+    key: 'closedKan',
+    value: function closedKan() {
+      for (var i = 0; i < this.hand.length; i++) {
+        if (this.hand[i].tileCode === this.drawnTile.tileCode) {
+          this.closedKans.push(this.drawnTile);
+          this.openHand.unshift({
+            details: this.drawnTile,
+            type: 'closedKan'
+          });
+
+          this.hand.splice(i, 3);
+          this.drawTile();
+        }
+      }
+    }
+  }, {
+    key: 'findTileCode',
+    value: function findTileCode(rank, suit) {
+      var tileCode = 0;
+
+      switch (suit) {
+        case 'number':
+          tileCode += 0;
+          break;
+        case 'pin':
+          tileCode += 10;
+          break;
+        case 'bamboo':
+          tileCode += 20;
+          break;
+        case 'wind':
+          tileCode += 40;
+          break;
+        case 'dragon':
+          tileCode += 80;
+      }
+
+      switch (rank) {
+        case 'white':
+          break;
+        case 'green':
+          tileCode += 10;
+          break;
+        case 'red':
+          tileCode += 20;
+          break;
+        case 'east':
+          break;
+        case 'south':
+          tileCode += 10;
+          break;
+        case 'west':
+          tileCode += 20;
+          break;
+        case 'north':
+          tileCode += 30;
+          break;
+        default:
+          tileCode += rank;
+      }
+
+      return tileCode;
+    }
+  }, {
+    key: 'isWinningHand',
+    value: function isWinningHand() {
+      // let's ignore yakuman for now
+      var winningHands = [];
+      var tripletCount = 0;
+
+      var handPlusDraw = this.hand.slice(0);
+      handPlusDraw.push(this.drawnTile);
+      handPlusDraw.sort(function (a, b) {
+        return a.tileCode < b.tileCode ? -1 : 1;
+      });
+
+      function thirteenOrphanParser(hand) {
+        var orphans = {};
+        hand.forEach(function (tile) {
+          var digit = tile.tileCode % 10;
+          if (digit !== 1 && digit !== 9 && digit !== 0) {
+            return [];
+          } else if (!orphans[tile.tileCode]) {
+            orphans[tile.tileCode] = true;
+          }
+        });
+
+        if (Object.keys(orphans).length === 13) {
+          winningHands.push({ type: 'thirteen orphans' });
+        }
+      }
+
+      function handParser(hand) {
+        var pairCount = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+        var storedSequences = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+
+        function checkRun() {
+          var runIndices = [0];
+          var currentTileCode = hand[0].tileCode;
+          var i = 1;
+          var j = 1;
+          while (j < 3 && i < hand.length) {
+            if (currentTileCode + j - 1 === hand[i].tileCode) {
+              i += 1;
+            } else if (currentTileCode + j === hand[i].tileCode) {
+              runIndices.push(i);
+              i += 1;
+              j += 1;
+            } else {
+              return [];
+            }
+          }
+          return runIndices;
+        }
+
+        function checkTriplet() {
+          if (hand.length > 2 && hand[1].tileCode === hand[0] && hand[2].tileCode === hand[0]) {
+            return true;
+          }
+          return false;
+        }
+
+        if (hand.length === 0) {
+          winningHands.push(storedSequences);
+        } else {
+          if (hand[0].tileCode < 30 && hand.length > 2) {
+            var runIndices = checkRun(hand);
+            if (runIndices.length > 0) {
+              var sequence = {
+                type: 'run',
+                details: hand[0]
+              };
+
+              var cloneHand = hand.slice(0);
+              for (var i = 0; i < 3; i++) {
+                cloneHand.splice(runIndices.pop(), 1);
+              }
+
+              var sequences = Object.assign({}, storedSequences, sequence);
+              handParser(cloneHand, pairCount, sequences);
+            }
+          }
+
+          var isTriplet = checkTriplet(hand);
+
+          if (isTriplet) {
+            var _sequence = {
+              type: 'triplet',
+              details: hand[0]
+            };
+
+            var _cloneHand = hand.slice(0);
+            _cloneHand.splice(0, 3);
+            var _sequences = Object.assign({}, storedSequences, _sequence);
+            handParser(_cloneHand, pairCount, _sequences);
+          }
+
+          if ((pairCount === storedSequences.length || pairCount === 0) && hand[0].tileCode === hand[1].tileCode) {
+            var _sequence2 = {
+              type: 'pair',
+              details: hand[0]
+            };
+
+            var _cloneHand2 = hand.slice(0);
+            _cloneHand2.splice(0, 2);
+            var _sequences2 = Object.assign({}, storedSequences, _sequence2);
+            handParser(_cloneHand2, pairCount + 1, _sequences2);
+          }
+        }
+      }
+
+      handParser(handPlusDraw);
+      thirteenOrphanParser(handPlusDraw);
+      if (winningHands.length > 0) {
+        return true;
+      }
+    }
+  }, {
+    key: 'calculatePoints',
+    value: function calculatePoints(winningHand) {
+      var allGreens = [22, 23, 24, 26, 28, 90];
+      var isGreen = true;
+
+      var suits = {};
+      var winds = {};
+      var dragons = {};
+      var ranks = {};
+      var runs = {};
+      var melds = {};
+
+      var runCount = 0;
+      var meldCount = 0;
+      var pairs = 0;
+      var dragonCount = 0;
+      var windCount = 0;
+      var allHonors = true;
+      var allTerminals = true;
+      var allIncludeTerminals = true;
+      var pairSuit = void 0;
+      var fu = 20;
+
+      var handleMeld = function handleMeld(sequence) {
+        var fuMultiplier = sequence.type === 'triplet' ? 1 : 4;
+        meldCount++;
+        suits[sequence.details.suit] = true;
+
+        if (melds[sequence.details.tileCode]) {
+          melds[sequence.details.tileCode]++;
+        } else {
+          melds[sequence.details.tileCode] = 1;
+        }
+
+        if (!allGreens.includes(sequence.details.tileCode)) {
+          isGreen = false;
+        }
+
+        if (sequence.details.tileCode % 10 === 0) {
+          allTerminals = false;
+          allIncludeTerminals = false;
+          sequence.details.suit === 'wind' ? windCount++ : dragonCount++;
+          fu += 8 * fuMultiplier;
+        } else if (sequence.details.tileCode % 10 !== 1 && sequence.details.tileCode % 10 !== 9) {
+          allHonors = false;
+          allTerminals = false;
+          allIncludeTerminals = false;
+          fu += 4 * fuMultiplier;
+        } else {
+          allHonors = false;
+          fu += 8 * fuMultiplier;
+        }
+      };
+
+      var handleRun = function handleRun(sequence) {
+        runCount++;
+        allTerminals = false;
+        allHonors = false;
+        suits[sequence.details.suit] = true;
+
+        if (runs[sequence.details.tileCode]) {
+          runs[sequence.details.tileCode]++;
+        } else {
+          runs[sequence.details.tileCode] = 1;
+        }
+
+        if (sequence.details.tileCode !== 22) {
+          isGreen = false;
+        }
+
+        if (sequence.details.tileCode % 10 !== 1 && sequence.details.tileCode % 10 !== 7) {
+          allIncludeTerminals = false;
+        }
+      };
+
+      var handlePair = function handlePair(sequence) {
+        if (pairs === 0) {
+          suits[sequence.details.suit] = true;
+        } else {
+          pairSuit = false;
+        }
+
+        if (!allGreens.includes(sequence.details.tileCode)) {
+          isGreen = false;
+        }
+
+        if (sequence.details.suit % 10 !== 1 && sequence.details.suit % 10 !== 9) {
+          allTerminals = false;
+          allIncludeTerminals = false;
+        } else if (sequence.details.suit % 10 !== 0) {
+          allHonors = false;
+        }
+      };
+
+      var isNineGates = function isNineGates() {
+        if (Object.keys(suits).length > 1) {
+          return false;
+        }
+
+        var baseline = [3, 1, 1, 1, 1, 1, 1, 1, 3];
+        var numbers = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        winningHand.forEach(function (sequence) {
+          var digit = sequence.details.tileCode % 10;
+          switch (sequence.type) {
+            case 'triplet':
+              if (digit !== 1 && digit !== 9) {
+                return false;
+              }
+              numbers[digit - 1] += 3;
+              break;
+            case 'run':
+              numbers[digit - 1] += 1;
+              numbers[digit] += 1;
+              numbers[digit + 1] += 1;
+              break;
+            case 'pair':
+              numbers[digit - 1] += 2;
+              break;
+            case 'closedKan':
+              return false;
+          }
+        });
+
+        var excessCounted = false;
+        for (var i = 0; i < baseline.length; i++) {
+          if (numbers[i] < baseline[i] || numbers[i] > baseline[i] + 1) {
+            return false;
+          }
+
+          if (numbers[i] === baseline[i] + 1 && excessCounted) {
+            return false;
+          } else if (numbers[i] === baseline[i] + 1) {
+            excessCounted = true;
+          }
+        }
+      };
+
+      var countDoubleRuns = function countDoubleRuns() {
+        var doubleRuns = 0;
+        for (var run in runs) {
+          if (runs[run] > 1) {
+            doubleRuns++;
+          }
+        }
+
+        return doubleRuns;
+      };
+
+      var isHonitsu = function isHonitsu() {
+        var numberedSuitCount = 0;
+        for (var suit in suits) {
+          if (suit === 'number' || suit === 'bamboo' || suit === 'pin') {
+            numberedSuitCount++;
+          }
+        }
+
+        return numberedSuitCount === 1 ? true : false;
+      };
+
+      var hasThreeLikeSequences = function hasThreeLikeSequences(type) {
+        var rankCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+        var sequences = type === 'meld' ? melds : runs;
+
+        Object.keys(sequences).filter(function (sequence) {
+          var digit = sequence.details.tileCode % 10;
+          if (digit > 0) {
+            rankCounts[digit - 1] += 1;
+          }
+        });
+
+        rankCounts.forEach(function (count) {
+          if (count === 3) {
+            return true;
+          }
+        });
+
+        return false;
+      };
+
+      var isChantaiyao = function isChantaiyao() {
+        winningHand.forEach(function (sequence) {
+          var digit = sequence.details.tileCode % 10;
+          if (digit === 0 || digit === 8 || (digit > 1 && digit) < 7) {
+            return false;
+          } else if (digit === 7 && sequence.details.type !== 'run') {
+            return false;
+          }
+        });
+
+        return true;
+      };
+
+      var isIkkitsuukan = function isIkkitsuukan() {
+        if (runCount < 3) {
+          return false;
+        }
+
+        var tileCodes = [];
+        for (var run in runs) {
+          if (run.details.tileCode > 0) {
+            tileCodes.push(run.details.tileCode);
+          }
+        }
+
+        tileCodes.sort(function (a, b) {
+          return a.tileCode < b.tileCode ? -1 : 1;
+        });
+
+        var options = [1, 4, 7];
+        var optionIndex = 0;
+        var freebeeUsed = false;
+        for (var i = 0; i < tileCodes.length; i++) {
+          if (tileCodes[0] % 10 !== options[optionIndex] && freebeeUsed) {
+            return false;
+          } else if (tileCodes[0] % 10 !== options[optionIndex]) {
+            optionIndex = 0;
+            freebeeUsed = true;
+          } else {
+            optionIndex++;
+          }
+        }
+
+        return true;
+      };
+
+      var isTanyao = function isTanyao() {
+        winningHand.sequences.forEach(function (sequence) {
+          var digit = sequence.details.tileCode % 10;
+          var type = sequence.details.type;
+          if (digit === 1 || digit === 9 || digit === 7 && type !== 'run') {
+            return false;
+          }
+        });
+
+        return true;
+      };
+
+      winningHand.forEach(function (sequence) {
+        switch (sequence.type) {
+          case 'closedKan':
+          case 'triplet':
+            handleMeld(sequence);
+            break;
+          case 'run':
+            handleRun(sequence);
+            break;
+          default:
+            handlePair(sequence);
+        }
+      });
+
+      var winConditions = [];
+
+      if (this.closedKans.length === 4) {
+        winConditions.push({
+          japaneseName: 'Suu kantsu',
+          englishName: 'Four quads',
+          value: 8000
+        });
+      } else if (meldCount === 4) {
+        winConditions.push({
+          japaneseName: 'suu ankou',
+          englishName: 'Four concealed triplets',
+          value: 8000
+        });
+      }
+
+      if (allHonors) {
+        winConditions.push({
+          japaneseName: 'tsuu iisou',
+          englishName: 'All honors',
+          value: 8000
+        });
+      } else if (allTerminals) {
+        winConditions.push({
+          japaneseName: 'chinroutou',
+          englishNames: 'All terminals',
+          value: 8000
+        });
+      }
+
+      if (windCount === 4) {
+        winConditions.push({
+          japaneseName: 'daisuushii',
+          englishName: 'Big four winds',
+          value: 16000
+        });
+      } else if (windCount === 3 && pairSuit === 'wind') {
+        winConditions.push({
+          japaneseName: 'shousuushii',
+          englishName: 'Little four winds',
+          value: 8000
+        });
+      } else if (dragonCount === 3) {
+        winConditions.push({
+          japaneseName: 'daisangen',
+          englishName: 'Big three dragons',
+          value: 8000
+        });
+      } else if (allTerminals) {
+        winConditions.push({
+          japaneseName: 'chinroutou',
+          englishName: 'All terminals',
+          value: 8000
+        });
+      }
+
+      if (isGreen) {
+        winConditions.push({
+          japaneseName: 'ryuuisou',
+          englishName: 'All green',
+          points: 8000
+        });
+      }
+
+      if (isNineGates()) {
+        winConditions.push({
+          japaneseName: 'chuuren poutou',
+          englishName: 'Nine gates',
+          points: 8000
+        });
+      }
+
+      if (winningHand.length === 1) {
+        winConditions.push({
+          japaneseName: 'kokushi musou',
+          englishName: 'Thirteen Orphans',
+          points: 8000
+        });
+      }
+
+      // STOP HERE IF THERE WERE ANY YAKUMAN; NO NEED TO CONTININUE
+      if (winConditions.length > 0) {
+        return winConditions;
+      }
+
+      // REGULAR OLD YAKU
+      if (Object.keys(suits).length === 1) {
+        winConditions.push({
+          japaneseName: 'Chinitsu',
+          englishName: 'Full Flush',
+          han: 6
+        });
+      } else if (isHonitsu()) {
+        winConditions.push({
+          japaneseName: 'Honitsu',
+          englishName: 'Dirty Flush',
+          han: 3
+        });
+      }
+
+      var doubleRunCount = countDoubleRuns();
+      if (doubleRunCount === 2) {
+        winConditions.push({
+          japaneseName: 'Ryanpeikou',
+          englishName: 'Double-Double Run',
+          han: 3
+        });
+      } else if (doubleRunCount === 1) {
+        winConditions.push({
+          japaneseName: 'Iipekou',
+          englishName: 'Double Run',
+          han: 1
+        });
+      }
+
+      if (allIncludeTerminals) {
+        winConditions.push({
+          japaneseName: 'Juchan tayou',
+          englishName: 'Terminals in each set',
+          han: 3
+        });
+      }
+
+      if (dragonCount === 2 && pairSuit === 'dragon') {
+        winConditions.push({
+          japaneseName: 'Shou Sangen',
+          englishName: 'Little Three Dragons',
+          han: 2
+        });
+      }
+
+      if (pairs === 7) {
+        winConditions.push({
+          japaneseName: 'chiitoitsu',
+          englishName: 'Seven Pairs',
+          han: 2
+        });
+      }
+
+      if (this.closedKans.length === 3) {
+        winConditions.push({
+          japaneseName: 'San kantsu',
+          englishName: 'Three quads',
+          han: 2
+        });
+      } else if (meldCount === 3) {
+        winConditions.push({
+          japaneseName: 'San ankou',
+          englishName: 'Three concealed triplets',
+          han: 2
+        });
+      }
+
+      if (hasThreeLikeSequences('meld')) {
+        winConditions.push({
+          japaneseName: 'Sanshoku doukou',
+          englishName: 'Three color triplets',
+          han: 2
+        });
+      }
+
+      // ONCE I HAVE OPEN HANDS I NEED toitoiho, honroutou,
+
+      if (isChantaiyao()) {
+        winConditions.push({
+          japaneseName: 'Chantaiyao',
+          englishName: 'Terminals or honors in each set',
+          han: 2
+        });
+      }
+
+      if (isIkkitsuukan()) {
+        winConditions.push({
+          japaneseName: 'Ikkitsuukan',
+          englishName: 'Straight',
+          han: 2
+        });
+      }
+
+      if (hasThreeLikeSequences('run')) {
+        winConditions.push({
+          japaneseName: 'Sanshoku doujin',
+          englishName: 'Triple Run',
+          han: 2
+        });
+      }
+
+      if (isTanyao()) {
+        winConditions.push({
+          japaneseName: 'Tanyao',
+          englishName: 'All Simples',
+          han: 1
+        });
+      }
+
+      if (runCount === 4 && pairSuit !== 'dragon' && pairSuit !== 'wind') {
+        fu = 20;
+        winConditions.push({
+          japaneseName: 'Pinfu',
+          englishName: 'No points',
+          han: 1
+        });
+      }
+
+      if (pairs === 7) {
+        fu = 25;
+      }
+    }
+  }, {
+    key: 'isOpen',
+    value: function isOpen() {
+      return false;
+    }
+  }]);
+
+  return MahjongGame;
+}();
+
+//   isTenpai() {
+//     const tileCodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15,
+//       16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 40, 50, 60,
+//       70, 80, 90, 100];
+//
+//     for (let i = 0; i < this.hand.length; i++) {
+//       const savedTileCode = this.hand[i].tileCode;
+//       tileCodes.forEach((tileCode) => {
+//         this.hand[i].tileCode = tileCode;
+//         if (this.isWinningHand()) {
+//           break;
+//         }
+//       });
+//       this.hand[i].tileCode = savedTileCode;
+//     }
+//
+//     this.isWinningHand();
+//   }
+// }
+
+exports.default = MahjongGame;
 
 /***/ })
 /******/ ]);

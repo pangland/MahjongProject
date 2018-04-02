@@ -15,4 +15,55 @@ img {
   margin-top: 0;
   height: 64px;
   width: 42px;
+  -webkit-user-drag: none;
+  user-select: none;
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+}
+
+.discards {
+  flex-wrap: wrap;
+  width: 40%;
+}
+
+.hand-wrapper {
+  width: 30%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.open-hand {
+  display: flex;
 }
