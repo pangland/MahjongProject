@@ -1,6 +1,10 @@
-ul {
-  list-style-type: none;
-  display: flex;
+img {
+  object-fit: cover;
+  margin-top: 0;
+  height: 64px;
+  width: 42px;
+  -webkit-user-drag: none;
+  user-select: none;￼￼
 }
 
 li {
@@ -10,47 +14,9 @@ li {
   padding: 0;
 }
 
-img {
-  object-fit: cover;
-  margin-top: 0;
-  height: 64px;
-  width: 42px;
-  -webkit-user-drag: none;
-  user-select: none;
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
-￼
+ul {
+  list-style-type: none;
+  display: flex;
 }
 
 .discards {
@@ -66,4 +32,12 @@ img {
 
 .open-hand {
   display: flex;
+}
+
+.selected-image {
+  background-color: red;
+}
+
+.selected-image > img {
+  opacity: .9;
 }
